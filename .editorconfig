@@ -1,0 +1,4 @@
+root = true
+
+[*]
+ktlint_standard_function-naming = disabled

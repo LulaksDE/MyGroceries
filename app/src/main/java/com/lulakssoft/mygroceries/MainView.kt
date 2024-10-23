@@ -57,28 +57,29 @@ fun MainView(navController: NavController) {
                         )
                     }
                 }
+                DropdownMenu(
+                    modifier = Modifier.fillMaxWidth(),
+                    expanded = expanded.value,
+                    onDismissRequest = { expanded.value = false },
+                ) {
+                    DropdownMenuItem(
+                        text = { Text("Haushalt 01") },
+                        onClick = {
+                            selectedOption.value = "Haushalt 01"
+                            expanded.value = false
+                        },
+                    )
+                    DropdownMenuItem(
+                        text = { Text("Haushalt 02") },
+                        onClick = {
+                            selectedOption.value = "Haushalt 02"
+                            expanded.value = false
+                        },
+                    )
+                }
             },
             modifier = Modifier.fillMaxWidth(),
         )
-        DropdownMenu(
-            expanded = expanded.value,
-            onDismissRequest = { expanded.value = false },
-        ) {
-            DropdownMenuItem(
-                text = { Text("Haushalt 01") },
-                onClick = {
-                    selectedOption.value = "Haushalt 01"
-                    expanded.value = false
-                },
-            )
-            DropdownMenuItem(
-                text = { Text("Haushalt 02") },
-                onClick = {
-                    selectedOption.value = "Haushalt 02"
-                    expanded.value = false
-                },
-            )
-        }
     }) { innerPadding ->
         Column(
             modifier =

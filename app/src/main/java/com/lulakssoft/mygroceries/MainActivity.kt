@@ -14,6 +14,7 @@ import com.lulakssoft.mygroceries.database.HouseholdDatabase
 import com.lulakssoft.mygroceries.ui.theme.MyGroceriesTheme
 import com.lulakssoft.mygroceries.view.main.MainView
 import com.lulakssoft.mygroceries.view.main.MainViewModel
+import com.lulakssoft.mygroceries.view.main.SecondView
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {

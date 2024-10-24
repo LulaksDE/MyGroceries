@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -45,52 +46,73 @@ fun MainView(
     val expanded = remember { mutableStateOf(false) }
     val selectedOption = remember { mutableStateOf("") }
 
-    Scaffold(topBar = {
-        TopAppBar(
-            title = {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center,
-                ) {
-                    Text(
-                        if (selectedOption.value.isEmpty()) "Bitte Haushalt wählen" else selectedOption.value,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.clickable { expanded.value = true },
-                    )
-                    IconButton(onClick = { expanded.value = true }) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.baseline_arrow_drop_down_24),
-                            contentDescription = "Dropdown Menu",
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center,
+                    ) {
+                        Text(
+                            if (selectedOption.value.isEmpty()) "Bitte Haushalt wählen" else selectedOption.value,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.clickable { expanded.value = true },
                         )
+                        IconButton(onClick = { expanded.value = true }) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.baseline_arrow_drop_down_24),
+                                contentDescription = "Dropdown Menu",
+                            )
+                        }
                     }
-                }
-                DropdownMenu(
-                    modifier = Modifier.fillMaxWidth(),
-                    expanded = expanded.value,
-                    onDismissRequest = { expanded.value = false },
-                ) {
-                    for (household in households) {
-                        DropdownMenuItem(
-                            text = { Text(household.householdName) },
-                            onClick = {
-                                selectedOption.value = household.householdName
-                                expanded.value = false
-                            },
-                        )
+                    DropdownMenu(
+                        modifier = Modifier.fillMaxWidth(),
+                        expanded = expanded.value,
+                        onDismissRequest = { expanded.value = false },
+                    ) {
+                        for (household in households) {
+                            DropdownMenuItem(
+                                text = { Text(household.householdName) },
+                                onClick = {
+                                    selectedOption.value = household.householdName
+                                    expanded.value = false
+                                },
+                            )
+                        }
                     }
-                }
-            },
-            modifier = Modifier.fillMaxWidth(),
-        )
-    }, floatingActionButton = {
-        IconButton(onClick = { navController.navigate("secondView") }) {
-            Icon(
-                painter = painterResource(id = R.drawable.baseline_add_24),
-                contentDescription = "Add Household",
+                },
+                modifier = Modifier.fillMaxWidth(),
             )
-        }
-    }) { innerPadding ->
+        },
+        floatingActionButton = {
+            IconButton(onClick = { navController.navigate("secondView") }) {
+                Icon(
+                    painter = painterResource(id = R.drawable.baseline_add_24),
+                    contentDescription = "Add Household",
+                )
+            }
+        },
+        bottomBar = {
+            BottomAppBar {
+                Row(Modifier.fillMaxWidth().padding(5.dp), horizontalArrangement = Arrangement.SpaceBetween) {
+                    IconButton(onClick = { navController.navigate("secondView") }) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.baseline_add_24),
+                            contentDescription = "Add Household",
+                        )
+                    }
+                    IconButton(onClick = { viewModel.delete(households.find { it.householdName == selectedOption.value }!!) }) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.baseline_delete_outline_24),
+                            contentDescription = "Delete Household",
+                        )
+                    }
+                }
+            }
+        },
+    ) { innerPadding ->
         Column(
             modifier =
                 Modifier

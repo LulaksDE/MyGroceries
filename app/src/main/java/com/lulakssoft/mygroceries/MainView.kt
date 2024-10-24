@@ -1,5 +1,6 @@
 package com.lulakssoft.mygroceries
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -20,6 +21,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -29,13 +31,12 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import org.w3c.dom.Text
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainView(navController: NavController) {
     val expanded = remember { mutableStateOf(false) }
-    val selectedOption = remember { mutableStateOf("My Groceries App") }
+    val selectedOption = remember { mutableStateOf("") }
 
     Scaffold(topBar = {
         TopAppBar(
@@ -46,7 +47,7 @@ fun MainView(navController: NavController) {
                     horizontalArrangement = Arrangement.Center,
                 ) {
                     Text(
-                        selectedOption.value,
+                        if (selectedOption.value.isEmpty()) "Bitte Haushalt wählen" else selectedOption.value,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.clickable { expanded.value = true },
                     )
@@ -88,26 +89,35 @@ fun MainView(navController: NavController) {
                     .fillMaxHeight(),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Content(navController)
+            Content(navController, selectedOption)
         }
     }
 }
 
 @Composable
-fun Content(navController: NavController) {
-    Row(
-        modifier =
-            Modifier
-                .clip(shape = RoundedCornerShape(10.dp))
-                .background(MaterialTheme.colorScheme.primary)
-                .padding(25.dp),
-    ) {
-        Column(Modifier.weight(1f)) {
-            Text("Dont forget to buy groceries!", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onPrimary)
+fun Content(
+    navController: NavController,
+    selectedOption: MutableState<String>,
+) {
+    AnimatedVisibility(visible = !selectedOption.value.isEmpty()) {
+        Row(
+            modifier =
+                Modifier
+                    .clip(shape = RoundedCornerShape(10.dp))
+                    .background(MaterialTheme.colorScheme.primary)
+                    .padding(25.dp),
+        ) {
+            Column(Modifier.weight(1f)) {
+                Text(
+                    "Dont forget to buy groceries!",
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onPrimary,
+                )
+            }
+            OutlinedButton(
+                onClick = { navController.navigate("secondView") },
+                modifier = Modifier.padding(top = 2.dp),
+            ) { Text(selectedOption.value, color = MaterialTheme.colorScheme.onPrimary) }
         }
-        OutlinedButton(
-            onClick = { navController.navigate("secondView") },
-            modifier = Modifier.padding(top = 2.dp),
-        ) { Text("Haushalt", color = MaterialTheme.colorScheme.onPrimary) }
     }
 }

@@ -1,4 +1,4 @@
-package com.lulakssoft.mygroceries
+package com.lulakssoft.mygroceries.view.main
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -14,7 +14,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.lulakssoft.mygroceries.view.main.MainViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

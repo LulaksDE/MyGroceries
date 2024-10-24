@@ -1,4 +1,4 @@
-package com.lulakssoft.mygroceries
+package com.lulakssoft.mygroceries.view.main
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
@@ -22,6 +22,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -31,10 +33,15 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.lulakssoft.mygroceries.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainView(navController: NavController) {
+fun MainView(
+    navController: NavController,
+    viewModel: MainViewModel,
+) {
+    val households by viewModel.households.collectAsState(initial = emptyList())
     val expanded = remember { mutableStateOf(false) }
     val selectedOption = remember { mutableStateOf("") }
 
@@ -63,24 +70,26 @@ fun MainView(navController: NavController) {
                     expanded = expanded.value,
                     onDismissRequest = { expanded.value = false },
                 ) {
-                    DropdownMenuItem(
-                        text = { Text("Haushalt 01") },
-                        onClick = {
-                            selectedOption.value = "Haushalt 01"
-                            expanded.value = false
-                        },
-                    )
-                    DropdownMenuItem(
-                        text = { Text("Haushalt 02") },
-                        onClick = {
-                            selectedOption.value = "Haushalt 02"
-                            expanded.value = false
-                        },
-                    )
+                    for (household in households) {
+                        DropdownMenuItem(
+                            text = { Text(household.householdName) },
+                            onClick = {
+                                selectedOption.value = household.householdName
+                                expanded.value = false
+                            },
+                        )
+                    }
                 }
             },
             modifier = Modifier.fillMaxWidth(),
         )
+    }, floatingActionButton = {
+        IconButton(onClick = { navController.navigate("secondView") }) {
+            Icon(
+                painter = painterResource(id = R.drawable.baseline_add_24),
+                contentDescription = "Add Household",
+            )
+        }
     }) { innerPadding ->
         Column(
             modifier =

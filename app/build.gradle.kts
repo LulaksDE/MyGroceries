@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
+    alias(libs.plugins.ksp)
 }
 
 android {
@@ -69,4 +70,10 @@ dependencies {
 
     // Custom dependencies
     implementation(libs.androidx.navigation.compose)
+    implementation(libs.room)
+    implementation(libs.room.runtime)
+    annotationProcessor(libs.room.compiler)
+    ksp(libs.room.compiler)
+    implementation(libs.coroutines)
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
 }

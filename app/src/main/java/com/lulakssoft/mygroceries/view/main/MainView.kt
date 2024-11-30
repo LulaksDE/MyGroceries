@@ -17,6 +17,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -45,6 +46,9 @@ fun MainView(
     val households by viewModel.households.collectAsState(initial = emptyList())
     val expanded = remember { mutableStateOf(false) }
     val selectedOption = remember { mutableStateOf("") }
+
+    var selectedIcon = BottomBarNavigation.Home
+
 
     Scaffold(
         topBar = {
@@ -86,29 +90,13 @@ fun MainView(
                 modifier = Modifier.fillMaxWidth(),
             )
         },
-        floatingActionButton = {
-            IconButton(onClick = { navController.navigate("secondView") }) {
-                Icon(
-                    painter = painterResource(id = R.drawable.baseline_add_24),
-                    contentDescription = "Add Household",
-                )
-            }
-        },
         bottomBar = {
-            BottomAppBar {
-                Row(Modifier.fillMaxWidth().padding(5.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-                    IconButton(onClick = { navController.navigate("secondView") }) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.baseline_add_24),
-                            contentDescription = "Add Household",
-                        )
-                    }
-                    IconButton(onClick = { viewModel.delete(households.find { it.householdName == selectedOption.value }!!) }) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.baseline_delete_outline_24),
-                            contentDescription = "Delete Household",
-                        )
-                    }
+            NavigationBar {
+                BottomAppBar(
+                    contentColor = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    BottomBar(selectedIcon = selectedIcon, onIconSelected = { icon -> selectedIcon = icon }, navController)
                 }
             }
         },

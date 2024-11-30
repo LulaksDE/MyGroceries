@@ -1,4 +1,4 @@
-package com.lulakssoft.mygroceries.view.main
+package com.lulakssoft.mygroceries.view.household.create
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -17,9 +17,9 @@ import androidx.navigation.NavController
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SecondView(
+fun CreateHouseholdView(
     navController: NavController,
-    viewModel: MainViewModel,
+    createViewModel: CreateHouseholdViewModel,
     navigateUp: () -> Unit,
 ) {
     Scaffold(topBar = {
@@ -34,11 +34,11 @@ fun SecondView(
             Text("Bitte geben Sie den Namen des neuen Haushalts ein.", modifier = Modifier.padding(16.dp))
             TextField(
                 modifier = Modifier.fillMaxWidth(),
-                value = viewModel.householdText,
-                onValueChange = { viewModel.householdText = it },
+                value = createViewModel.householdText,
+                onValueChange = { createViewModel.householdText = it },
                 label = { Text("Haushalt eingabe") },
             )
-            Button(onClick = { viewModel.insert() }, modifier = Modifier.padding(top = 5.dp)) { Text("Haushalt hinzufügen") }
+            Button(onClick = { createViewModel.insert() }, modifier = Modifier.padding(top = 5.dp)) { Text("Haushalt hinzufügen") }
             Button(
                 onClick = { navigateUp() },
                 modifier = Modifier.padding(top = 5.dp),

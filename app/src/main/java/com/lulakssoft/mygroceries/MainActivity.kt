@@ -12,9 +12,12 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.lulakssoft.mygroceries.database.HouseholdDatabase
 import com.lulakssoft.mygroceries.ui.theme.MyGroceriesTheme
+import com.lulakssoft.mygroceries.view.home.HomeView
+import com.lulakssoft.mygroceries.view.home.HomeViewModel
+import com.lulakssoft.mygroceries.view.household.create.CreateHouseholdViewModel
 import com.lulakssoft.mygroceries.view.main.MainView
 import com.lulakssoft.mygroceries.view.main.MainViewModel
-import com.lulakssoft.mygroceries.view.main.SecondView
+import com.lulakssoft.mygroceries.view.household.create.CreateHouseholdView
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -30,16 +33,22 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun MyGroceriesApp() {
-    val viewModel = viewModel<MainViewModel>()
-    viewModel.initialize(HouseholdDatabase.getInstance(LocalContext.current))
+    val mainViewModel = viewModel<MainViewModel>()
+    val homeViewModel = viewModel<HomeViewModel>()
+    val createHouseholdViewModel = viewModel<CreateHouseholdViewModel>()
+    mainViewModel.initialize(HouseholdDatabase.getInstance(LocalContext.current))
+    createHouseholdViewModel.initialize(HouseholdDatabase.getInstance(LocalContext.current))
 
     val navController = rememberNavController()
     NavHost(navController = navController, startDestination = "mainView") {
         composable(route = "mainView") {
-            MainView(navController = navController, viewModel = viewModel)
+            MainView(navController = navController, viewModel = mainViewModel)
         }
-        composable(route = "secondView") {
-            SecondView(navController = navController, viewModel = viewModel) {
+        composable(route = "homeView") {
+            HomeView(navController = navController, viewModel = homeViewModel)
+        }
+        composable(route = "createView") {
+            CreateHouseholdView(navController = navController, createViewModel = createHouseholdViewModel) {
                 navController.navigateUp()
             }
         }

@@ -20,6 +20,7 @@ import androidx.navigation.NavController
 fun SecondView(
     navController: NavController,
     viewModel: MainViewModel,
+    navigateUp: () -> Unit,
 ) {
     Scaffold(topBar = {
         TopAppBar(title = { Text("Haushalt hinzufügen") })
@@ -39,7 +40,7 @@ fun SecondView(
             )
             Button(onClick = { viewModel.insert() }, modifier = Modifier.padding(top = 5.dp)) { Text("Haushalt hinzufügen") }
             Button(
-                onClick = { navController.navigate("mainView") },
+                onClick = { navigateUp() },
                 modifier = Modifier.padding(top = 5.dp),
             ) { Text("Zurück zur Hauptseite") }
         }

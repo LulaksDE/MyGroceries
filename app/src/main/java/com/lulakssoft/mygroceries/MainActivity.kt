@@ -39,7 +39,9 @@ fun MyGroceriesApp() {
             MainView(navController = navController, viewModel = viewModel)
         }
         composable(route = "secondView") {
-            SecondView(navController = navController, viewModel = viewModel)
+            SecondView(navController = navController, viewModel = viewModel) {
+                navController.navigateUp()
+            }
         }
     }
 }

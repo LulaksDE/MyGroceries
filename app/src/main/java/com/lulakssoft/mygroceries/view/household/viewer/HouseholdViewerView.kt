@@ -6,7 +6,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import com.lulakssoft.mygroceries.database.Household
+import com.lulakssoft.mygroceries.database.household.Household
 
 @Composable
 fun HouseholdViewerView(

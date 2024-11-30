@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">My Groceries</string>
+    <string name="tab_household">Household</string>
+    <string name="tab_grocery">Grocery</string>
+    <string name="empty_screen_title">This screen is Empty</string>
+    <string name="empty_screen_subtitle">It will not be empty for long. Trust me Bro!</string>
 </resources>

@@ -1,19 +1,19 @@
-package com.lulakssoft.mygroceries.database
+package com.lulakssoft.mygroceries.database.grocery
 
 import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 
-@Database(entities = [Household::class], version = 1, exportSchema = false)
-abstract class HouseholdDatabase : RoomDatabase() {
-    abstract val householdDao: HouseholdDao
+@Database(entities = [Grocery::class], version = 1, exportSchema = false)
+abstract class GroceryDatabase : RoomDatabase() {
+    abstract val groceryDao: GroceryDao
 
     companion object {
         @Volatile
-        private var INSTANCE: HouseholdDatabase? = null
+        private var INSTANCE: GroceryDatabase? = null
 
-        fun getInstance(context: Context): HouseholdDatabase {
+        fun getInstance(context: Context): GroceryDatabase {
             synchronized(this) {
                 var instance = INSTANCE
 
@@ -22,7 +22,7 @@ abstract class HouseholdDatabase : RoomDatabase() {
                         Room
                             .databaseBuilder(
                                 context.applicationContext,
-                                HouseholdDatabase::class.java,
+                                GroceryDatabase::class.java,
                                 "household_database",
                             ).fallbackToDestructiveMigration()
                             .build()

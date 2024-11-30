@@ -5,9 +5,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.lulakssoft.mygroceries.database.Household
-import com.lulakssoft.mygroceries.database.HouseholdDatabase
-import com.lulakssoft.mygroceries.database.HouseholdRepository
+import com.lulakssoft.mygroceries.database.household.Household
+import com.lulakssoft.mygroceries.database.household.HouseholdDatabase
+import com.lulakssoft.mygroceries.database.household.HouseholdRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 

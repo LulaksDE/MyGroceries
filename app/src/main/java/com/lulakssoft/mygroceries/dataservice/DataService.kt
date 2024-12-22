@@ -1,0 +1,39 @@
+package com.lulakssoft.mygroceries.dataservice
+
+import com.lulakssoft.mygroceries.dto.ProductDto
+import io.ktor.client.call.body
+import io.ktor.client.request.get
+import io.ktor.client.statement.HttpResponse
+import io.ktor.client.statement.bodyAsChannel
+import io.ktor.http.contentLength
+import io.ktor.utils.io.ByteReadChannel
+
+class DataService {
+    private val apiManager = ApiManager()
+
+    suspend fun getProductDataFromBarCode(productId: String): ProductDto {
+        val requestUrl = "product/$productId"
+        return apiManager.jsonHttpClient
+            .get(requestUrl)
+            .body()
+    }
+
+    suspend fun getProductImage(productImageUrl: String): ByteArray {
+        val httpResponse: HttpResponse =
+            apiManager.imageHttpClient.get(productImageUrl)
+        val bytes: ByteReadChannel = httpResponse.bodyAsChannel()
+
+        val byteBufferSize = 1024 * 100
+        val byteBuffer = ByteArray(httpResponse.contentLength()!!.toInt())
+
+        var read = 0
+        do {
+            val currentRead = bytes.readAvailable(byteBuffer, read, byteBufferSize)
+            if (currentRead > 0) {
+                read += currentRead
+            }
+        } while (currentRead > 0)
+
+        return byteBuffer
+    }
+}

@@ -1,4 +1,4 @@
-package com.lulakssoft.mygroceries.database
+package com.lulakssoft.mygroceries.database.household
 
 import androidx.room.Dao
 import androidx.room.Delete

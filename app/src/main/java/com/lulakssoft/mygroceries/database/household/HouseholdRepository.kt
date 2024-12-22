@@ -1,4 +1,4 @@
-package com.lulakssoft.mygroceries.database
+package com.lulakssoft.mygroceries.database.household
 
 class HouseholdRepository(
     private val householdDao: HouseholdDao,

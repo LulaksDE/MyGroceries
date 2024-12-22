@@ -1,28 +1,28 @@
 package com.lulakssoft.mygroceries.view.main
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.background
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.BottomAppBar
+import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -33,22 +33,41 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
+import androidx.navigation.NavHost
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
 import com.lulakssoft.mygroceries.R
+import com.lulakssoft.mygroceries.view.home.HomeView
+import com.lulakssoft.mygroceries.view.home.HomeViewModel
+import com.lulakssoft.mygroceries.view.household.HouseholdView
+import com.lulakssoft.mygroceries.view.household.HouseholdViewModel
+import com.lulakssoft.mygroceries.view.products.ProductsView
+import com.lulakssoft.mygroceries.view.products.ProductsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainView(
-    navController: NavController,
-    viewModel: MainViewModel,
-) {
+fun MainView(viewModel: MainViewModel) {
+    val navController = rememberNavController()
+    val homeViewModel = remember { HomeViewModel() }
+    val householdViewModel = remember { HouseholdViewModel() }
+    val productsViewModel = remember { ProductsViewModel() }
     val households by viewModel.households.collectAsState(initial = emptyList())
     val expanded = remember { mutableStateOf(false) }
     val selectedOption = remember { mutableStateOf("") }
+    val currentBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = currentBackStackEntry?.destination?.route
 
     Scaffold(
         topBar = {
             TopAppBar(
+                modifier = Modifier.clip(RoundedCornerShape(bottomStart = 16.dp, bottomEnd = 16.dp)),
+                colors =
+                    TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                        titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                    ),
                 title = {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -83,72 +102,71 @@ fun MainView(
                         }
                     }
                 },
-                modifier = Modifier.fillMaxWidth(),
             )
         },
-        floatingActionButton = {
-            IconButton(onClick = { navController.navigate("secondView") }) {
-                Icon(
-                    painter = painterResource(id = R.drawable.baseline_add_24),
-                    contentDescription = "Add Household",
-                )
-            }
-        },
         bottomBar = {
-            BottomAppBar {
-                Row(Modifier.fillMaxWidth().padding(5.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-                    IconButton(onClick = { navController.navigate("secondView") }) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.baseline_add_24),
-                            contentDescription = "Add Household",
-                        )
-                    }
-                    IconButton(onClick = { viewModel.delete(households.find { it.householdName == selectedOption.value }!!) }) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.baseline_delete_outline_24),
-                            contentDescription = "Delete Household",
-                        )
-                    }
-                }
+            AnimatedVisibility(
+                visible = selectedOption.value.isNotEmpty(),
+                enter = slideInVertically(initialOffsetY = { it }),
+                exit = slideOutVertically(targetOffsetY = { it }),
+            ) {
+                BottomBar(
+                    currentView =
+                        when (currentRoute) {
+                            "homeView" -> BottomBarNavigationView.Home
+                            "householdView" -> BottomBarNavigationView.Household
+                            "productsView" -> BottomBarNavigationView.Products
+                            else -> BottomBarNavigationView.Home
+                        },
+                    onNavigate = { view ->
+                        val targetRoute =
+                            when (view) {
+                                BottomBarNavigationView.Home -> "homeView"
+                                BottomBarNavigationView.Household -> "householdView"
+                                BottomBarNavigationView.Products -> "productsView"
+                            }
+                        if (currentRoute != targetRoute) {
+                            navController.navigate(targetRoute) {
+                                popUpTo(targetRoute) { inclusive = true }
+                                launchSingleTop = true
+                            }
+                        }
+                    },
+                )
             }
         },
     ) { innerPadding ->
         Column(
-            modifier =
-                Modifier
-                    .padding(innerPadding)
-                    .fillMaxHeight(),
-            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.padding(innerPadding).fillMaxSize(),
         ) {
-            Content(navController, selectedOption)
-        }
-    }
-}
-
-@Composable
-fun Content(
-    navController: NavController,
-    selectedOption: MutableState<String>,
-) {
-    AnimatedVisibility(visible = !selectedOption.value.isEmpty()) {
-        Row(
-            modifier =
-                Modifier
-                    .clip(shape = RoundedCornerShape(10.dp))
-                    .background(MaterialTheme.colorScheme.primary)
-                    .padding(25.dp),
-        ) {
-            Column(Modifier.weight(1f)) {
+            if (selectedOption.value.isEmpty()) {
                 Text(
-                    "Dont forget to buy groceries!",
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onPrimary,
+                    "Bitte wählen Sie einen Haushalt aus!",
+                    modifier =
+                        Modifier
+                            .padding(16.dp)
+                            .align(Alignment.CenterHorizontally),
                 )
+                Button(
+                    onClick = { viewModel.insert() },
+                    modifier =
+                        Modifier
+                            .padding(5.dp)
+                            .align(Alignment.CenterHorizontally),
+                ) { Text("Haushalt hinzufügen") }
+            } else {
+                NavHost(navController, "homeView") {
+                    composable(route = "homeView") {
+                        HomeView(homeViewModel)
+                    }
+                    composable(route = "householdView") {
+                        HouseholdView(householdViewModel)
+                    }
+                    composable(route = "productsView") {
+                        ProductsView(productsViewModel)
+                    }
+                }
             }
-            OutlinedButton(
-                onClick = { navController.navigate("secondView") },
-                modifier = Modifier.padding(top = 2.dp),
-            ) { Text(selectedOption.value, color = MaterialTheme.colorScheme.onPrimary) }
         }
     }
 }

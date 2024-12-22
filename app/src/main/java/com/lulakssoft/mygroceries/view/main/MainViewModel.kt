@@ -14,7 +14,7 @@ import kotlinx.coroutines.launch
 class MainViewModel : ViewModel() {
     private lateinit var repository: HouseholdRepository
 
-    var householdText by mutableStateOf("")
+    var householdText by mutableStateOf("Toller Haushalt")
     lateinit var households: Flow<List<Household>>
 
     fun initialize(database: HouseholdDatabase) {

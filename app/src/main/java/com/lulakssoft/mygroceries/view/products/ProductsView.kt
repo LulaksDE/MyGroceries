@@ -63,6 +63,7 @@ fun ProductsView(viewModel: ProductsViewModel) {
                     Button(onClick = {
                         viewModel.scannedCode = ""
                         viewModel.product = ProductDto("", ProductInfo("", "", ""))
+                        viewModel.errorMessage = ""
                     }) {
                         Text("Scan new Bar code")
                     }

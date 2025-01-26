@@ -1,5 +1,6 @@
 package com.lulakssoft.mygroceries.dataservice
 
+import android.util.Log
 import com.lulakssoft.mygroceries.dto.ProductDto
 import io.ktor.client.call.body
 import io.ktor.client.request.get
@@ -13,9 +14,14 @@ class DataService {
 
     suspend fun getProductDataFromBarCode(productId: String): ProductDto {
         val requestUrl = "product/$productId"
-        return apiManager.jsonHttpClient
-            .get(requestUrl)
-            .body()
+        val response =
+            apiManager.jsonHttpClient
+                .get(requestUrl)
+
+        Log.d("DataService", "Response: $response")
+        Log.d("DataService", "Response Body: ${response.body<String>()}")
+
+        return response.body()
     }
 
     suspend fun getProductImage(productImageUrl: String): ByteArray {

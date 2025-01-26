@@ -3,12 +3,15 @@ package com.lulakssoft.mygroceries.view.products
 import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -16,7 +19,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -33,30 +35,60 @@ import com.google.zxing.ResultPoint
 import com.journeyapps.barcodescanner.BarcodeCallback
 import com.journeyapps.barcodescanner.BarcodeResult
 import com.journeyapps.barcodescanner.DecoratedBarcodeView
+import com.lulakssoft.mygroceries.dto.ProductDto
+import com.lulakssoft.mygroceries.dto.ProductInfo
 
 @Composable
 fun ProductsView(viewModel: ProductsViewModel) {
-    val scannedQrCode by viewModel.scannedQrCode.observeAsState()
-
     Scaffold { innerPadding ->
         Column(
             modifier = Modifier.padding(innerPadding),
         ) {
-            if (viewModel.product.name.isEmpty()) {
+            if (viewModel.product.product.name
+                    .isEmpty()
+            ) {
                 Text("No product selected")
             } else {
-                Text("Product: ${viewModel.product.name}")
+                Text("Product: ${viewModel.product.product.name}")
             }
-            // Show scanned QR code or other content
-            scannedQrCode?.let {
-                Text(
-                    text = "Scanned QR Code: $it",
-                    modifier = Modifier.padding(16.dp),
-                )
-            }
-
-            ProductViewWithScanner { qrCode ->
-                viewModel.onQrCodeScanned(qrCode) // Pass the QR code to the ViewModel
+            if (viewModel.loading) {
+                CircularProgressIndicator()
+            } else {
+                // Show scanned QR code or other content
+                if (viewModel.scannedCode.isNotEmpty()) {
+                    Text("Scanned QR Code: ${viewModel.scannedCode}")
+                }
+                if (viewModel.errorMessage.isNotEmpty()) {
+                    Text("Error: ${viewModel.errorMessage}")
+                    Button(onClick = {
+                        viewModel.scannedCode = ""
+                        viewModel.product = ProductDto("", ProductInfo("", "", ""))
+                    }) {
+                        Text("Scan new Bar code")
+                    }
+                } else {
+                    if (viewModel.product.product.name
+                            .isNotEmpty()
+                    ) {
+                        Text("Product: ${viewModel.product.product.name}")
+                        Text("Brand: ${viewModel.product.product.brand}")
+                        Image(
+                            bitmap = viewModel.productImage,
+                            contentDescription = "Product Image",
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                        Button(onClick = {
+                            viewModel.scannedCode = ""
+                            viewModel.product = ProductDto("", ProductInfo("", "", ""))
+                        }) {
+                            Text("Scan new Bar code")
+                        }
+                    } else {
+                        ProductViewWithScanner { qrCode ->
+                            viewModel.onQrCodeScanned(qrCode) // Pass the QR code to the ViewModel
+                        }
+                    }
+                }
             }
         }
     }
@@ -64,7 +96,6 @@ fun ProductsView(viewModel: ProductsViewModel) {
 
 @Composable
 fun ProductViewWithScanner(onQrCodeScanned: (String) -> Unit) {
-    val context = LocalContext.current
     var hasCameraPermission by remember { mutableStateOf(false) }
 
     // Request Camera Permission
@@ -145,7 +176,12 @@ fun QrCodeScanner(onQrCodeScanned: (String) -> Unit) {
                 resume() // Start the scanner
             }
         },
-        modifier = Modifier.fillMaxWidth().height(300.dp).clip(MaterialTheme.shapes.medium),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .height(300.dp)
+                .padding(horizontal = 16.dp)
+                .clip(MaterialTheme.shapes.medium),
     )
 }
 

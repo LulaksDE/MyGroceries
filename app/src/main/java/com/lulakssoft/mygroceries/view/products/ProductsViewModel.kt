@@ -7,32 +7,32 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.lulakssoft.mygroceries.dataservice.DataService
 import com.lulakssoft.mygroceries.dto.ProductDto
+import com.lulakssoft.mygroceries.dto.ProductInfo
 import kotlinx.coroutines.launch
 
 class ProductsViewModel : ViewModel() {
     private val dataService = DataService()
 
-    var product: ProductDto by mutableStateOf(ProductDto("", "", ""))
+    var product: ProductDto by mutableStateOf(ProductDto("", ProductInfo("", "", "")))
     var errorMessage: String by mutableStateOf("")
     var loading: Boolean by mutableStateOf(false)
     lateinit var productImage: ImageBitmap
     var scannedCode: String by mutableStateOf("")
 
-    fun getProduct() {
+    fun getProduct(barcode: String) {
         viewModelScope.launch {
             errorMessage = ""
             loading = true
 
             try {
-                val foundProduct = dataService.getProductDataFromBarCode(scannedCode)
+                val foundProduct = dataService.getProductDataFromBarCode(barcode)
+                Log.d("ProductsViewModel", "Product found: $foundProduct")
 
-                val loadedUserImage = dataService.getProductImage(foundProduct.imageUrl)
+                val loadedUserImage = dataService.getProductImage(foundProduct.product.imageUrl)
                 val bitmap = BitmapFactory.decodeByteArray(loadedUserImage, 0, loadedUserImage.size)
                 productImage = bitmap.asImageBitmap()
 
@@ -45,13 +45,10 @@ class ProductsViewModel : ViewModel() {
         }
     }
 
-    private val _scannedQrCode = MutableLiveData<String>()
-    val scannedQrCode: LiveData<String> get() = _scannedQrCode
-
     fun onQrCodeScanned(qrCode: String) {
-        _scannedQrCode.value = qrCode
+        scannedCode = qrCode
         // Perform additional logic like fetching product details
-        Log.d("ProductsViewModel", "QR Code Scanned: $qrCode")
-        getProduct()
+        Log.d("ProductsViewModel", "QR Code Scanned: $scannedCode")
+        getProduct(scannedCode)
     }
 }

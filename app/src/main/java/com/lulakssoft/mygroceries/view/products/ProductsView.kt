@@ -1,6 +1,8 @@
 package com.lulakssoft.mygroceries.view.products
 
+import android.app.DatePickerDialog
 import android.content.pm.PackageManager
+import android.icu.util.Calendar
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
@@ -10,8 +12,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DatePicker
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -22,8 +26,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -44,55 +50,113 @@ fun ProductsView(viewModel: ProductsViewModel) {
         Column(
             modifier = Modifier.padding(innerPadding),
         ) {
-            if (viewModel.product.product.name
-                    .isEmpty()
-            ) {
-                Text("No product selected")
+            if (viewModel.scannedSomething) {
+                ProductInfoDialog(viewModel)
             } else {
-                Text("Product: ${viewModel.product.product.name}")
-            }
-            if (viewModel.loading) {
-                CircularProgressIndicator()
-            } else {
-                // Show scanned QR code or other content
-                if (viewModel.scannedCode.isNotEmpty()) {
-                    Text("Scanned QR Code: ${viewModel.scannedCode}")
-                }
-                if (viewModel.errorMessage.isNotEmpty()) {
-                    Text("Error: ${viewModel.errorMessage}")
-                    Button(onClick = {
-                        viewModel.scannedCode = ""
-                        viewModel.product = ProductDto("", ProductInfo("", "", ""))
-                        viewModel.errorMessage = ""
-                    }) {
-                        Text("Scan new Bar code")
-                    }
-                } else {
-                    if (viewModel.product.product.name
-                            .isNotEmpty()
-                    ) {
-                        Text("Product: ${viewModel.product.product.name}")
-                        Text("Brand: ${viewModel.product.product.brand}")
-                        Image(
-                            bitmap = viewModel.productImage,
-                            contentDescription = "Product Image",
-                            modifier = Modifier.fillMaxWidth(),
-                        )
-                        Button(onClick = {
-                            viewModel.scannedCode = ""
-                            viewModel.product = ProductDto("", ProductInfo("", "", ""))
-                        }) {
-                            Text("Scan new Bar code")
-                        }
-                    } else {
-                        ProductViewWithScanner { qrCode ->
-                            viewModel.onQrCodeScanned(qrCode) // Pass the QR code to the ViewModel
-                        }
-                    }
+                ProductViewWithScanner { qrCode ->
+                    viewModel.onQrCodeScanned(qrCode) // Pass the QR code to the ViewModel
                 }
             }
         }
     }
+}
+
+@Composable
+fun ProductInfoDialog(viewModel: ProductsViewModel) {
+    // Calculate default date (current date + 1 week)
+    val initialCalendar =
+        remember {
+            Calendar.getInstance().apply {
+                add(Calendar.DAY_OF_YEAR, 7)
+            }
+        }
+    var selectedDate by remember { mutableStateOf(initialCalendar) }
+
+    AlertDialog(
+        onDismissRequest = {
+            viewModel.scannedSomething = false
+        },
+        title = {
+            Text(text = "Product Information")
+        },
+        text = {
+            Column(modifier = Modifier.fillMaxWidth()) {
+                if (viewModel.loading) {
+                    CircularProgressIndicator(modifier = Modifier.align(CenterHorizontally))
+                } else {
+                    Text("Product: ${viewModel.product.product.name}")
+                    Text("Brand: ${viewModel.product.product.brand}")
+                    Image(
+                        bitmap = viewModel.productImage,
+                        contentDescription = "Product Image",
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                    DatePicker(
+                        initialDate = selectedDate,
+                        onDateSelected = { newDate ->
+                            selectedDate = newDate
+                        },
+                    )
+                    Text("Selected Date: ${selectedDate.formatToString()}")
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    // TODO: Save the product with the selected date
+                },
+                enabled = !viewModel.loading,
+            ) {
+                Text("Save")
+            }
+        },
+        dismissButton = {
+            Button(onClick = {
+                viewModel.scannedSomething = false
+                viewModel.scannedCode = ""
+                viewModel.product = ProductDto("", ProductInfo("", "", ""))
+                viewModel.productImage = ImageBitmap(1, 1)
+            }) {
+                Text("Cancel")
+            }
+        },
+    )
+}
+
+@Composable
+fun DatePicker(
+    initialDate: Calendar,
+    onDateSelected: (Calendar) -> Unit,
+) {
+    val context = LocalContext.current
+
+    val datePickerDialog =
+        DatePickerDialog(
+            context,
+            { _, selectedYear, selectedMonth, selectedDay ->
+                val newDate =
+                    Calendar.getInstance().apply {
+                        set(selectedYear, selectedMonth, selectedDay)
+                    }
+                onDateSelected(newDate)
+            },
+            initialDate.get(Calendar.YEAR),
+            initialDate.get(Calendar.MONTH),
+            initialDate.get(Calendar.DAY_OF_MONTH),
+        )
+
+    Button(onClick = { datePickerDialog.show() }) {
+        Text("Select Date")
+    }
+}
+
+// Extension function to format Calendar date
+fun Calendar.formatToString(): String {
+    val day = this.get(Calendar.DAY_OF_MONTH)
+    val month = this.get(Calendar.MONTH) + 1 // Adding 1 since Calendar.MONTH is 0-based
+    val year = this.get(Calendar.YEAR)
+    return "$day/$month/$year"
 }
 
 @Composable

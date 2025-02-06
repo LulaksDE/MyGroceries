@@ -20,6 +20,7 @@ class ProductsViewModel : ViewModel() {
     var product: ProductDto by mutableStateOf(ProductDto("", ProductInfo("", "", "")))
     var errorMessage: String by mutableStateOf("")
     var loading: Boolean by mutableStateOf(false)
+    var scannedSomething: Boolean by mutableStateOf(false)
     lateinit var productImage: ImageBitmap
     var scannedCode: String by mutableStateOf("")
 
@@ -49,6 +50,7 @@ class ProductsViewModel : ViewModel() {
         scannedCode = qrCode
         // Perform additional logic like fetching product details
         Log.d("ProductsViewModel", "QR Code Scanned: $scannedCode")
+        scannedSomething = true
         getProduct(scannedCode)
     }
 }

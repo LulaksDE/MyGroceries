@@ -1,0 +1,22 @@
+package com.lulakssoft.mygroceries.database.product
+
+import androidx.room.Dao
+import androidx.room.Delete
+import androidx.room.Insert
+import androidx.room.Query
+import kotlinx.coroutines.flow.Flow
+
+@Dao
+interface ProductDao {
+    @Query("SELECT * FROM product_table ORDER BY productName ASC")
+    fun selectAllProductsSortedByName(): Flow<List<Product>>
+
+    @Insert
+    suspend fun insert(product: Product)
+
+    @Query("DELETE FROM product_table")
+    suspend fun deleteAll()
+
+    @Delete
+    suspend fun delete(product: Product)
+}

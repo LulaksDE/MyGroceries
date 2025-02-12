@@ -8,6 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.lulakssoft.mygroceries.database.household.HouseholdDatabase
+import com.lulakssoft.mygroceries.database.product.ProductDatabase
 import com.lulakssoft.mygroceries.ui.theme.MyGroceriesTheme
 import com.lulakssoft.mygroceries.view.main.MainView
 import com.lulakssoft.mygroceries.view.main.MainViewModel
@@ -27,6 +28,6 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun MyGroceriesApp() {
     val mainViewModel = viewModel<MainViewModel>()
-    mainViewModel.initialize(HouseholdDatabase.getInstance(LocalContext.current))
+    mainViewModel.initialize(HouseholdDatabase.getInstance(LocalContext.current), ProductDatabase.getInstance(LocalContext.current))
     MainView(mainViewModel)
 }

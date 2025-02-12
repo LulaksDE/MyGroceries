@@ -20,6 +20,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -27,13 +28,13 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavHost
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -50,12 +51,15 @@ import com.lulakssoft.mygroceries.view.products.ProductsViewModel
 @Composable
 fun MainView(viewModel: MainViewModel) {
     val navController = rememberNavController()
+
     val homeViewModel = remember { HomeViewModel() }
     val householdViewModel = remember { HouseholdViewModel() }
     val productsViewModel = remember { ProductsViewModel() }
+
     val households by viewModel.households.collectAsState(initial = emptyList())
     val expanded = remember { mutableStateOf(false) }
-    val selectedOption = remember { mutableStateOf("") }
+    val selectedHousehold = rememberSaveable { mutableStateOf("") }
+
     val currentBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = currentBackStackEntry?.destination?.route
 
@@ -75,7 +79,7 @@ fun MainView(viewModel: MainViewModel) {
                         horizontalArrangement = Arrangement.Center,
                     ) {
                         Text(
-                            if (selectedOption.value.isEmpty()) "Bitte Haushalt wählen" else selectedOption.value,
+                            if (selectedHousehold.value.isEmpty()) "Bitte Haushalt wählen" else selectedHousehold.value,
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.clickable { expanded.value = true },
                         )
@@ -95,7 +99,7 @@ fun MainView(viewModel: MainViewModel) {
                             DropdownMenuItem(
                                 text = { Text(household.householdName) },
                                 onClick = {
-                                    selectedOption.value = household.householdName
+                                    selectedHousehold.value = household.householdName
                                     expanded.value = false
                                 },
                             )
@@ -106,7 +110,7 @@ fun MainView(viewModel: MainViewModel) {
         },
         bottomBar = {
             AnimatedVisibility(
-                visible = selectedOption.value.isNotEmpty(),
+                visible = selectedHousehold.value.isNotEmpty(),
                 enter = slideInVertically(initialOffsetY = { it }),
                 exit = slideOutVertically(targetOffsetY = { it }),
             ) {
@@ -139,7 +143,7 @@ fun MainView(viewModel: MainViewModel) {
         Column(
             modifier = Modifier.padding(innerPadding).fillMaxSize(),
         ) {
-            if (selectedOption.value.isEmpty()) {
+            if (selectedHousehold.value.isEmpty()) {
                 Text(
                     "Bitte wählen Sie einen Haushalt aus!",
                     modifier =
@@ -147,8 +151,19 @@ fun MainView(viewModel: MainViewModel) {
                             .padding(16.dp)
                             .align(Alignment.CenterHorizontally),
                 )
+                TextField(
+                    value = viewModel.householdText,
+                    onValueChange = { viewModel.householdText = it },
+                    label = { Text("Haushalt eingabe") },
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                )
                 Button(
-                    onClick = { viewModel.insert() },
+                    onClick = {
+                        viewModel.insert()
+                    },
                     modifier =
                         Modifier
                             .padding(5.dp)

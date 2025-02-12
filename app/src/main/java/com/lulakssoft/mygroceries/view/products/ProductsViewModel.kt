@@ -9,25 +9,37 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.lulakssoft.mygroceries.database.product.Product
+import com.lulakssoft.mygroceries.database.product.ProductDatabase
+import com.lulakssoft.mygroceries.database.product.ProductRepository
 import com.lulakssoft.mygroceries.dataservice.DataService
 import com.lulakssoft.mygroceries.dto.ProductDto
 import com.lulakssoft.mygroceries.dto.ProductInfo
 import kotlinx.coroutines.launch
+import java.time.LocalDate
+import java.time.LocalDateTime
 
 class ProductsViewModel : ViewModel() {
     private val dataService = DataService()
 
-    var product: ProductDto by mutableStateOf(ProductDto("", ProductInfo("", "", "")))
     var errorMessage: String by mutableStateOf("")
     var loading: Boolean by mutableStateOf(false)
+
     var scannedSomething: Boolean by mutableStateOf(false)
-    lateinit var productImage: ImageBitmap
     var scannedCode: String by mutableStateOf("")
+
+    var product: ProductDto by mutableStateOf(ProductDto("", ProductInfo("", "", "")))
+    var productImage: ImageBitmap by mutableStateOf(ImageBitmap(1, 1))
+    var productBestBefore by mutableStateOf(LocalDate.now())
+    var productEntryDate by mutableStateOf(LocalDateTime.now())
+    var productQuantity by mutableStateOf(1)
 
     fun getProduct(barcode: String) {
         viewModelScope.launch {
             errorMessage = ""
             loading = true
+            productImage = ImageBitmap(1, 1)
+            product = ProductDto("", ProductInfo("", "", ""))
 
             try {
                 val foundProduct = dataService.getProductDataFromBarCode(barcode)
@@ -53,4 +65,27 @@ class ProductsViewModel : ViewModel() {
         scannedSomething = true
         getProduct(scannedCode)
     }
+
+    private lateinit var repository: ProductRepository
+
+    fun initialize(database: ProductDatabase) {
+        repository = ProductRepository(database.productDao)
+    }
+
+    fun insert() =
+        viewModelScope.launch {
+            repository.insert(
+                Product(
+                    0,
+                    0,
+                    product.product.name,
+                    product.product.brand,
+                    scannedCode,
+                    productQuantity,
+                    productBestBefore,
+                    productEntryDate,
+                    productImage,
+                ),
+            )
+        }
 }

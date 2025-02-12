@@ -3,11 +3,12 @@ plugins {
     alias(libs.plugins.jetbrains.kotlin.android)
     alias(libs.plugins.ksp)
     kotlin("plugin.serialization") version "1.9.22"
+    alias(libs.plugins.compose.compiler)
 }
 
 android {
     namespace = "com.lulakssoft.mygroceries"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.lulakssoft.mygroceries"

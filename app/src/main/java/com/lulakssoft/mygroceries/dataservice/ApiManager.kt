@@ -2,7 +2,7 @@ package com.lulakssoft.mygroceries.dataservice
 
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.ClientRequestException
-import io.ktor.client.plugins.HttpCallValidator
+import io.ktor.client.plugins.HttpCallValidatorConfig
 import io.ktor.client.plugins.HttpResponseValidator
 import io.ktor.client.plugins.ServerResponseException
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
@@ -51,7 +51,7 @@ class ApiManager {
             }
         }
 
-    private fun getCustomResponseValidator(responseValidator: HttpCallValidator.Config): HttpCallValidator.Config {
+    private fun getCustomResponseValidator(responseValidator: HttpCallValidatorConfig): HttpCallValidatorConfig {
         responseValidator.handleResponseExceptionWithRequest { exception, _ ->
             var exceptionResponseText = exception.message ?: "Unknown Error occurred. Please contact your administrator"
 

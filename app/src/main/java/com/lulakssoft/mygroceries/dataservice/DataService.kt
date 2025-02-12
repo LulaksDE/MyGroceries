@@ -27,6 +27,9 @@ class DataService {
     suspend fun getProductImage(productImageUrl: String): ByteArray {
         val httpResponse: HttpResponse =
             apiManager.imageHttpClient.get(productImageUrl)
+        if (httpResponse.contentLength() == null) {
+            throw Exception("Content length is null")
+        }
         val bytes: ByteReadChannel = httpResponse.bodyAsChannel()
 
         val byteBufferSize = 1024 * 100

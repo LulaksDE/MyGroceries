@@ -41,11 +41,14 @@ import com.google.zxing.ResultPoint
 import com.journeyapps.barcodescanner.BarcodeCallback
 import com.journeyapps.barcodescanner.BarcodeResult
 import com.journeyapps.barcodescanner.DecoratedBarcodeView
+import com.lulakssoft.mygroceries.database.product.ProductDatabase
 import com.lulakssoft.mygroceries.dto.ProductDto
 import com.lulakssoft.mygroceries.dto.ProductInfo
 
 @Composable
 fun ProductsView(viewModel: ProductsViewModel) {
+    viewModel.initialize(ProductDatabase.getInstance(LocalContext.current))
+
     Scaffold { innerPadding ->
         Column(
             modifier = Modifier.padding(innerPadding),
@@ -104,7 +107,12 @@ fun ProductInfoDialog(viewModel: ProductsViewModel) {
         confirmButton = {
             Button(
                 onClick = {
-                    // TODO: Save the product with the selected date
+                    // Save the product to the database
+                    viewModel.insert()
+                    viewModel.scannedSomething = false
+                    viewModel.scannedCode = ""
+                    viewModel.product = ProductDto("", ProductInfo("", "", ""))
+                    viewModel.productImage = ImageBitmap(1, 1)
                 },
                 enabled = !viewModel.loading,
             ) {
@@ -179,12 +187,6 @@ fun ProductViewWithScanner(onQrCodeScanned: (String) -> Unit) {
             ) {
                 QrCodeScanner(onQrCodeScanned = onQrCodeScanned)
             }
-
-            // Other UI elements below the scanner
-            Text(
-                text = "Other content below the scanner",
-                modifier = Modifier.padding(16.dp),
-            )
         }
     } else {
         Text("Camera permission is required to use the scanner.")

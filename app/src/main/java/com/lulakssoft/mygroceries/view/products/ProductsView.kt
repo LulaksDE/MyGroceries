@@ -40,14 +40,12 @@ import com.google.zxing.ResultPoint
 import com.journeyapps.barcodescanner.BarcodeCallback
 import com.journeyapps.barcodescanner.BarcodeResult
 import com.journeyapps.barcodescanner.DecoratedBarcodeView
-import com.lulakssoft.mygroceries.database.product.DatabaseApp
 import com.lulakssoft.mygroceries.dto.ProductDto
 import com.lulakssoft.mygroceries.dto.ProductInfo
+import java.time.LocalDate
 
 @Composable
 fun ProductsView(viewModel: ProductsViewModel) {
-    viewModel.initialize(DatabaseApp.getInstance(LocalContext.current))
-
     Scaffold { innerPadding ->
         Column(
             modifier = Modifier.padding(innerPadding),
@@ -96,6 +94,7 @@ fun ProductInfoDialog(viewModel: ProductsViewModel) {
                     DatePicker(
                         initialDate = selectedDate,
                         onDateSelected = { newDate ->
+                            viewModel.productBestBefore = newDate.toLocalDate()
                             selectedDate = newDate
                         },
                     )
@@ -165,6 +164,13 @@ fun Calendar.formatToString(): String {
     val year = this.get(Calendar.YEAR)
     return "$day/$month/$year"
 }
+
+fun Calendar.toLocalDate(): LocalDate =
+    LocalDate.of(
+        this.get(Calendar.YEAR),
+        this.get(Calendar.MONTH) + 1, // Adding 1 since Calendar.MONTH is 0-based
+        this.get(Calendar.DAY_OF_MONTH),
+    )
 
 @Composable
 fun ProductViewWithScanner(onQrCodeScanned: (String) -> Unit) {

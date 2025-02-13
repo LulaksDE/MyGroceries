@@ -9,7 +9,6 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.lulakssoft.mygroceries.database.product.DatabaseApp
 import com.lulakssoft.mygroceries.database.product.Product
 import com.lulakssoft.mygroceries.database.product.ProductRepository
 import com.lulakssoft.mygroceries.dataservice.DataService
@@ -19,7 +18,9 @@ import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.LocalDateTime
 
-class ProductsViewModel : ViewModel() {
+class ProductsViewModel(
+    private val repository: ProductRepository,
+) : ViewModel() {
     private val dataService = DataService()
 
     var errorMessage: String by mutableStateOf("")
@@ -64,12 +65,6 @@ class ProductsViewModel : ViewModel() {
         Log.d("ProductsViewModel", "QR Code Scanned: $scannedCode")
         scannedSomething = true
         getProduct(scannedCode)
-    }
-
-    private lateinit var repository: ProductRepository
-
-    fun initialize(databaseApp: DatabaseApp) {
-        repository = ProductRepository(databaseApp.productDao, databaseApp.householdDao)
     }
 
     fun insert() =

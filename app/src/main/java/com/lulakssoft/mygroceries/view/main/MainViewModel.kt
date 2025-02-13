@@ -13,11 +13,12 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 
 class MainViewModel : ViewModel() {
-    private lateinit var productRepository: ProductRepository
+    lateinit var productRepository: ProductRepository
 
     var householdText by mutableStateOf("Toller Haushalt")
     lateinit var households: Flow<List<Household>>
     lateinit var products: Flow<List<Product>>
+    var selectedHousehold by mutableStateOf(Household(0, ""))
 
     fun initialize(databaseApp: DatabaseApp) {
         this.productRepository = ProductRepository(databaseApp.productDao, databaseApp.householdDao)

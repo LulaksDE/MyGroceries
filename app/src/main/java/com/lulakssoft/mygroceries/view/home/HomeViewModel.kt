@@ -5,4 +5,6 @@ import com.lulakssoft.mygroceries.database.product.ProductRepository
 
 class HomeViewModel(
     private val repository: ProductRepository,
-) : ViewModel()
+) : ViewModel() {
+    val products = repository.allProducts
+}

@@ -5,18 +5,18 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
-import com.lulakssoft.mygroceries.database.household.Household
 
-@Database(entities = [Product::class, Household::class], version = 4, exportSchema = false)
+@Database(entities = [Product::class, Household::class], version = 1, exportSchema = false)
 @TypeConverters(Converters::class, ImageBitmapConverters::class)
-abstract class ProductDatabase : RoomDatabase() {
+abstract class DatabaseApp : RoomDatabase() {
     abstract val productDao: ProductDao
+    abstract val householdDao: HouseholdDao
 
     companion object {
         @Volatile
-        private var INSTANCE: ProductDatabase? = null
+        private var INSTANCE: DatabaseApp? = null
 
-        fun getInstance(context: Context): ProductDatabase {
+        fun getInstance(context: Context): DatabaseApp {
             synchronized(this) {
                 var instance = INSTANCE
 
@@ -25,7 +25,7 @@ abstract class ProductDatabase : RoomDatabase() {
                         Room
                             .databaseBuilder(
                                 context.applicationContext,
-                                ProductDatabase::class.java,
+                                DatabaseApp::class.java,
                                 "product_database",
                             ).fallbackToDestructiveMigration()
                             .build()

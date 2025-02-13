@@ -15,11 +15,26 @@ interface ProductDao {
     fun selectProductsByHouseholdId(householdId: Int): Flow<List<Product>>
 
     @Insert
-    suspend fun insert(product: Product)
+    suspend fun insertProduct(product: Product)
 
     @Query("DELETE FROM product_table")
     suspend fun deleteAll()
 
     @Delete
     suspend fun delete(product: Product)
+}
+
+@Dao
+interface HouseholdDao {
+    @Query("SELECT * FROM household_table ORDER BY householdName ASC")
+    fun selectAllHouseholdsSortedByName(): Flow<List<Household>>
+
+    @Insert
+    suspend fun insertHousehold(household: Household)
+
+    @Query("DELETE FROM household_table")
+    suspend fun deleteAll()
+
+    @Delete
+    suspend fun delete(household: Household)
 }

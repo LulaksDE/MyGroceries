@@ -9,8 +9,8 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.lulakssoft.mygroceries.database.product.DatabaseApp
 import com.lulakssoft.mygroceries.database.product.Product
-import com.lulakssoft.mygroceries.database.product.ProductDatabase
 import com.lulakssoft.mygroceries.database.product.ProductRepository
 import com.lulakssoft.mygroceries.dataservice.DataService
 import com.lulakssoft.mygroceries.dto.ProductDto
@@ -68,16 +68,16 @@ class ProductsViewModel : ViewModel() {
 
     private lateinit var repository: ProductRepository
 
-    fun initialize(database: ProductDatabase) {
-        repository = ProductRepository(database.productDao)
+    fun initialize(databaseApp: DatabaseApp) {
+        repository = ProductRepository(databaseApp.productDao, databaseApp.householdDao)
     }
 
     fun insert() =
         viewModelScope.launch {
-            repository.insert(
+            repository.insertProduct(
                 Product(
                     0,
-                    0,
+                    1,
                     product.product.name,
                     product.product.brand,
                     scannedCode,

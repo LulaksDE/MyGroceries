@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DatePicker
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -41,13 +40,13 @@ import com.google.zxing.ResultPoint
 import com.journeyapps.barcodescanner.BarcodeCallback
 import com.journeyapps.barcodescanner.BarcodeResult
 import com.journeyapps.barcodescanner.DecoratedBarcodeView
-import com.lulakssoft.mygroceries.database.product.ProductDatabase
+import com.lulakssoft.mygroceries.database.product.DatabaseApp
 import com.lulakssoft.mygroceries.dto.ProductDto
 import com.lulakssoft.mygroceries.dto.ProductInfo
 
 @Composable
 fun ProductsView(viewModel: ProductsViewModel) {
-    viewModel.initialize(ProductDatabase.getInstance(LocalContext.current))
+    viewModel.initialize(DatabaseApp.getInstance(LocalContext.current))
 
     Scaffold { innerPadding ->
         Column(

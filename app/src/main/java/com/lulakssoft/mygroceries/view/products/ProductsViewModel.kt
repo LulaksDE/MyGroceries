@@ -10,7 +10,6 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.lulakssoft.mygroceries.database.product.Product
-import com.lulakssoft.mygroceries.database.product.ProductDatabase
 import com.lulakssoft.mygroceries.database.product.ProductRepository
 import com.lulakssoft.mygroceries.dataservice.DataService
 import com.lulakssoft.mygroceries.dto.ProductDto
@@ -19,7 +18,9 @@ import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.LocalDateTime
 
-class ProductsViewModel : ViewModel() {
+class ProductsViewModel(
+    private val repository: ProductRepository,
+) : ViewModel() {
     private val dataService = DataService()
 
     var errorMessage: String by mutableStateOf("")
@@ -66,18 +67,12 @@ class ProductsViewModel : ViewModel() {
         getProduct(scannedCode)
     }
 
-    private lateinit var repository: ProductRepository
-
-    fun initialize(database: ProductDatabase) {
-        repository = ProductRepository(database.productDao)
-    }
-
     fun insert() =
         viewModelScope.launch {
-            repository.insert(
+            repository.insertProduct(
                 Product(
                     0,
-                    0,
+                    1,
                     product.product.name,
                     product.product.brand,
                     scannedCode,

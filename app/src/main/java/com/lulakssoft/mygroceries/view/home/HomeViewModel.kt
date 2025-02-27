@@ -1,8 +1,10 @@
 package com.lulakssoft.mygroceries.view.home
 
-import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
+import com.lulakssoft.mygroceries.database.product.ProductRepository
 
-class HomeViewModel : ViewModel() {
-    val text = mutableStateOf("")
+class HomeViewModel(
+    private val repository: ProductRepository,
+) : ViewModel() {
+    val products = repository.allProducts
 }

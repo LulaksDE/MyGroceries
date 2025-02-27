@@ -52,9 +52,9 @@ import com.lulakssoft.mygroceries.view.products.ProductsViewModel
 fun MainView(viewModel: MainViewModel) {
     val navController = rememberNavController()
 
-    val homeViewModel = remember { HomeViewModel() }
-    val householdViewModel = remember { HouseholdViewModel() }
-    val productsViewModel = remember { ProductsViewModel() }
+    val homeViewModel = remember { HomeViewModel(viewModel.productRepository) }
+    val householdViewModel = remember { HouseholdViewModel(viewModel.productRepository) }
+    val productsViewModel = remember { ProductsViewModel(viewModel.productRepository) }
 
     val households by viewModel.households.collectAsState(initial = emptyList())
     val expanded = remember { mutableStateOf(false) }
@@ -99,7 +99,8 @@ fun MainView(viewModel: MainViewModel) {
                             DropdownMenuItem(
                                 text = { Text(household.householdName) },
                                 onClick = {
-                                    selectedHousehold.value = household.householdName
+                                    viewModel.selectedHousehold = household
+                                    selectedHousehold.value = viewModel.selectedHousehold.householdName
                                     expanded.value = false
                                 },
                             )

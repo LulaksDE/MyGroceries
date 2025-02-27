@@ -4,9 +4,15 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
-import com.lulakssoft.mygroceries.database.household.Household
 import java.time.LocalDate
 import java.time.LocalDateTime
+
+@Entity(tableName = "household_table")
+data class Household(
+    @PrimaryKey(autoGenerate = true)
+    val id: Int,
+    val householdName: String,
+)
 
 @Entity(
     tableName = "product_table",

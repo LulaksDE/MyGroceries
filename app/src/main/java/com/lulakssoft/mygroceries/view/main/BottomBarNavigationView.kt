@@ -11,9 +11,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 
 enum class BottomBarNavigationView {
-    Home,
     Household,
     Products,
+    Scanner,
 }
 
 @Composable
@@ -26,17 +26,6 @@ fun BottomBar(
             icon = {
                 Icon(
                     imageVector = Icons.Default.Home,
-                    contentDescription = "Home",
-                )
-            },
-            label = { Text("Home") },
-            selected = currentView == BottomBarNavigationView.Home,
-            onClick = { onNavigate(BottomBarNavigationView.Home) },
-        )
-        NavigationBarItem(
-            icon = {
-                Icon(
-                    imageVector = Icons.Default.Place,
                     contentDescription = "Household",
                 )
             },
@@ -47,13 +36,24 @@ fun BottomBar(
         NavigationBarItem(
             icon = {
                 Icon(
-                    imageVector = Icons.Default.ShoppingCart,
+                    imageVector = Icons.Default.Place,
                     contentDescription = "Products",
                 )
             },
             label = { Text("Products") },
             selected = currentView == BottomBarNavigationView.Products,
             onClick = { onNavigate(BottomBarNavigationView.Products) },
+        )
+        NavigationBarItem(
+            icon = {
+                Icon(
+                    imageVector = Icons.Default.ShoppingCart,
+                    contentDescription = "Scanner",
+                )
+            },
+            label = { Text("Scanner") },
+            selected = currentView == BottomBarNavigationView.Scanner,
+            onClick = { onNavigate(BottomBarNavigationView.Scanner) },
         )
     }
 }

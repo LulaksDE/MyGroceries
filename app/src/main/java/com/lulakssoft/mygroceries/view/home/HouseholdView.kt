@@ -1,5 +1,6 @@
 package com.lulakssoft.mygroceries.view.home
 
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -18,27 +19,13 @@ import androidx.compose.ui.unit.dp
 import com.lulakssoft.mygroceries.R
 
 @Composable
-fun HomeView(viewModel: HomeViewModel) {
-    val products by viewModel.products.collectAsState(initial = emptyList())
-
+fun HouseholdView(viewModel: HouseholdViewModel) {
     Scaffold(
-        floatingActionButton = {
-            IconButton(onClick = { /*TODO*/ }) {
-                Icon(
-                    painter = painterResource(id = R.drawable.baseline_add_24),
-                    contentDescription = "Add Household",
-                )
-            }
-        },
     ) { padding ->
-        LazyColumn {
-            items(products) { product ->
-                Card(modifier = Modifier.padding(8.dp).fillMaxWidth()) {
-                    Text(product.productName)
-                    Text(product.productQuantity.toString())
-                    Text(product.productBestBeforeDate.toString())
-                }
-            }
+        Column(
+            modifier = Modifier.padding(padding)
+        ) {
+            Text("You're on the household tab!")
         }
     }
 }

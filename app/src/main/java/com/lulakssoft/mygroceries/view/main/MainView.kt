@@ -40,21 +40,21 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.lulakssoft.mygroceries.R
-import com.lulakssoft.mygroceries.view.home.HomeView
-import com.lulakssoft.mygroceries.view.home.HomeViewModel
-import com.lulakssoft.mygroceries.view.household.HouseholdView
-import com.lulakssoft.mygroceries.view.household.HouseholdViewModel
+import com.lulakssoft.mygroceries.view.home.HouseholdView
+import com.lulakssoft.mygroceries.view.home.HouseholdViewModel
 import com.lulakssoft.mygroceries.view.products.ProductsView
 import com.lulakssoft.mygroceries.view.products.ProductsViewModel
+import com.lulakssoft.mygroceries.view.scanner.ScannerView
+import com.lulakssoft.mygroceries.view.scanner.ScannerViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainView(viewModel: MainViewModel) {
     val navController = rememberNavController()
 
-    val homeViewModel = remember { HomeViewModel(viewModel.productRepository) }
     val householdViewModel = remember { HouseholdViewModel(viewModel.productRepository) }
     val productsViewModel = remember { ProductsViewModel(viewModel.productRepository) }
+    val scannerViewModel = remember { ScannerViewModel(viewModel.productRepository) }
 
     val households by viewModel.households.collectAsState(initial = emptyList())
     val expanded = remember { mutableStateOf(false) }
@@ -118,17 +118,17 @@ fun MainView(viewModel: MainViewModel) {
                 BottomBar(
                     currentView =
                         when (currentRoute) {
-                            "homeView" -> BottomBarNavigationView.Home
                             "householdView" -> BottomBarNavigationView.Household
                             "productsView" -> BottomBarNavigationView.Products
-                            else -> BottomBarNavigationView.Home
+                            "scannerView" -> BottomBarNavigationView.Scanner
+                            else -> BottomBarNavigationView.Household
                         },
                     onNavigate = { view ->
                         val targetRoute =
                             when (view) {
-                                BottomBarNavigationView.Home -> "homeView"
                                 BottomBarNavigationView.Household -> "householdView"
-                                BottomBarNavigationView.Products -> "productsView"
+                                BottomBarNavigationView.Products-> "productsView"
+                                BottomBarNavigationView.Scanner -> "scannerView"
                             }
                         if (currentRoute != targetRoute) {
                             navController.navigate(targetRoute) {
@@ -171,15 +171,15 @@ fun MainView(viewModel: MainViewModel) {
                             .align(Alignment.CenterHorizontally),
                 ) { Text("Haushalt hinzufügen") }
             } else {
-                NavHost(navController, "homeView") {
-                    composable(route = "homeView") {
-                        HomeView(homeViewModel)
-                    }
+                NavHost(navController, "householdView") {
                     composable(route = "householdView") {
                         HouseholdView(householdViewModel)
                     }
                     composable(route = "productsView") {
                         ProductsView(productsViewModel)
+                    }
+                    composable(route = "scannerView") {
+                        ScannerView(scannerViewModel)
                     }
                 }
             }

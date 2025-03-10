@@ -7,6 +7,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.google.firebase.FirebaseApp
 import com.lulakssoft.mygroceries.database.product.DatabaseApp
 import com.lulakssoft.mygroceries.ui.theme.MyGroceriesTheme
 import com.lulakssoft.mygroceries.view.main.MainView
@@ -15,6 +16,7 @@ import com.lulakssoft.mygroceries.view.main.MainViewModel
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        FirebaseApp.initializeApp(this)
         enableEdgeToEdge()
         setContent {
             MyGroceriesTheme {

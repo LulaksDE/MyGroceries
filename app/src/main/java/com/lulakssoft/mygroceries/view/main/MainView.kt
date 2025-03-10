@@ -32,14 +32,19 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.lulakssoft.mygroceries.R
+import com.lulakssoft.mygroceries.view.account.AuthViewModel
+import com.lulakssoft.mygroceries.view.account.GoogleAuthUiClient
+import com.lulakssoft.mygroceries.view.account.SignInScreen
 import com.lulakssoft.mygroceries.view.home.HouseholdView
 import com.lulakssoft.mygroceries.view.home.HouseholdViewModel
 import com.lulakssoft.mygroceries.view.products.ProductsView
@@ -51,6 +56,7 @@ import com.lulakssoft.mygroceries.view.scanner.ScannerViewModel
 @Composable
 fun MainView(viewModel: MainViewModel) {
     val navController = rememberNavController()
+    val context = LocalContext.current
 
     val householdViewModel = remember { HouseholdViewModel(viewModel.productRepository) }
     val productsViewModel = remember { ProductsViewModel(viewModel.productRepository) }
@@ -62,6 +68,15 @@ fun MainView(viewModel: MainViewModel) {
 
     val currentBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = currentBackStackEntry?.destination?.route
+
+    val authClient =
+        remember {
+            GoogleAuthUiClient(context)
+        }
+    val signInViewModel =
+        viewModel {
+            AuthViewModel(authClient)
+        }
 
     Scaffold(
         topBar = {
@@ -121,14 +136,16 @@ fun MainView(viewModel: MainViewModel) {
                             "householdView" -> BottomBarNavigationView.Household
                             "productsView" -> BottomBarNavigationView.Products
                             "scannerView" -> BottomBarNavigationView.Scanner
+                            "signin" -> BottomBarNavigationView.SignIn
                             else -> BottomBarNavigationView.Household
                         },
                     onNavigate = { view ->
                         val targetRoute =
                             when (view) {
                                 BottomBarNavigationView.Household -> "householdView"
-                                BottomBarNavigationView.Products-> "productsView"
+                                BottomBarNavigationView.Products -> "productsView"
                                 BottomBarNavigationView.Scanner -> "scannerView"
+                                BottomBarNavigationView.SignIn -> "signin"
                             }
                         if (currentRoute != targetRoute) {
                             navController.navigate(targetRoute) {
@@ -180,6 +197,12 @@ fun MainView(viewModel: MainViewModel) {
                     }
                     composable(route = "scannerView") {
                         ScannerView(scannerViewModel)
+                    }
+                    composable("signin") {
+                        SignInScreen(
+                            viewModel = signInViewModel,
+                            errorMessage = signInViewModel.errorMessage,
+                        )
                     }
                 }
             }

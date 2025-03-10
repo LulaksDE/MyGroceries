@@ -3,8 +3,8 @@ package com.lulakssoft.mygroceries.database.product
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.room.Entity
 import androidx.room.ForeignKey
-import androidx.room.PrimaryKey
 import androidx.room.Index
+import androidx.room.PrimaryKey
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -25,7 +25,7 @@ data class Household(
             onDelete = ForeignKey.CASCADE,
         ),
     ],
-    indices = [Index("householdId")]
+    indices = [Index("householdId")],
 )
 data class Product(
     @PrimaryKey(autoGenerate = true)

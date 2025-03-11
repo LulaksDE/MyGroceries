@@ -58,7 +58,10 @@ fun MainView(viewModel: MainViewModel) {
     val navController = rememberNavController()
     val context = LocalContext.current
 
-    val householdViewModel = remember { HouseholdViewModel(viewModel.productRepository) }
+    val authClient = remember { GoogleAuthUiClient(context) }
+    val signInViewModel = viewModel { AuthViewModel(authClient) }
+
+    val householdViewModel = remember { HouseholdViewModel(viewModel.productRepository, authClient) }
     val productsViewModel = remember { ProductsViewModel(viewModel.productRepository) }
     val scannerViewModel = remember { ScannerViewModel(viewModel.productRepository) }
 
@@ -68,15 +71,6 @@ fun MainView(viewModel: MainViewModel) {
 
     val currentBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = currentBackStackEntry?.destination?.route
-
-    val authClient =
-        remember {
-            GoogleAuthUiClient(context)
-        }
-    val signInViewModel =
-        viewModel {
-            AuthViewModel(authClient)
-        }
 
     Scaffold(
         topBar = {

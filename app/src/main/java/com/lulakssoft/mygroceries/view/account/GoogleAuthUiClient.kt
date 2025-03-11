@@ -1,91 +1,137 @@
 package com.lulakssoft.mygroceries.view.account
 
 import android.content.Context
+import android.util.Log
 import androidx.credentials.CredentialManager
-import androidx.credentials.CustomCredential
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.exceptions.GetCredentialException
+import com.google.android.gms.auth.api.identity.Identity
+import com.google.android.gms.auth.api.identity.SignInClient
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
-import com.google.android.libraries.identity.googleid.GoogleIdTokenParsingException
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.ktx.auth
-import com.google.firebase.ktx.Firebase
 import com.lulakssoft.mygroceries.R
 import kotlinx.coroutines.tasks.await
-import kotlin.coroutines.cancellation.CancellationException
 
 class GoogleAuthUiClient(
     private val context: Context,
+    private val oneTapClient: SignInClient = Identity.getSignInClient(context),
+    private val credentialManager: CredentialManager = CredentialManager.create(context),
 ) {
-    private val auth = Firebase.auth
+    private val auth = FirebaseAuth.getInstance()
+    private val TAG = "GoogleAuthUiClient"
 
-    suspend fun signIn(): Result<FirebaseUser> {
-        val credentialManager = CredentialManager.create(context)
-
-        println("Web client ID: ${context.getString(R.string.your_web_client_id)}")
-
-        // Use GoogleIdTokenCredentialOption instead of GoogleIdOption
-        val googleIdOption =
-            GetGoogleIdOption
-                .Builder()
-                .setFilterByAuthorizedAccounts(false)
-                .setServerClientId(context.getString(R.string.your_web_client_id))
-                .build()
-
-        val request =
-            GetCredentialRequest
-                .Builder()
-                .addCredentialOption(googleIdOption)
-                .build()
-
+    suspend fun signIn(): SignInResult {
         return try {
-            val credentialResponse =
+            Log.d(TAG, "Starting sign-in process")
+
+            val googleIdOption =
+                GetGoogleIdOption
+                    .Builder()
+                    .setFilterByAuthorizedAccounts(false)
+                    .setServerClientId(context.getString(R.string.web_client_id))
+                    .build()
+
+            val request =
+                GetCredentialRequest
+                    .Builder()
+                    .addCredentialOption(googleIdOption)
+                    .build()
+
+            Log.d(TAG, "Requesting credential from CredentialManager")
+            val result =
                 credentialManager.getCredential(
                     request = request,
                     context = context,
                 )
 
-            when (val credential = credentialResponse.credential) {
-                is CustomCredential -> {
-                    if (credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
-                        val googleIdTokenCredential =
-                            GoogleIdTokenCredential
-                                .createFrom(credential.data)
+            val credential = result.credential
+            Log.d(TAG, "Received credential - Class: ${credential::class.java.simpleName}, Type: ${credential.type}")
 
-                        println("Google ID token: ${googleIdTokenCredential.idToken}")
+            when {
+                credential.type == "com.google.android.libraries.identity.googleid.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL" -> {
+                    Log.d(TAG, "Processing Google ID token credential")
+                    val googleIdToken = GoogleIdTokenCredential.createFrom(credential.data)?.idToken
 
-                        val firebaseCredential =
-                            GoogleAuthProvider.getCredential(
-                                googleIdTokenCredential.idToken,
-                                null,
+                    if (googleIdToken != null) {
+                        Log.d(TAG, "Successfully extracted Google ID token (first 10 chars): ${googleIdToken.take(10)}...")
+
+                        val googleCredentials = GoogleAuthProvider.getCredential(googleIdToken, null)
+                        Log.d(TAG, "Created Firebase credentials, signing in...")
+
+                        try {
+                            val authResult = auth.signInWithCredential(googleCredentials).await()
+                            val user = authResult.user
+
+                            if (user != null) {
+                                Log.d(TAG, "Sign in successful for user ID: ${user.uid}")
+                                return SignInResult(
+                                    data = user.toUserData(),
+                                    errorMessage = null,
+                                )
+                            } else {
+                                Log.e(TAG, "Auth result returned null user")
+                                return SignInResult(
+                                    data = null,
+                                    errorMessage = "Google sign in failed, no user returned",
+                                )
+                            }
+                        } catch (e: Exception) {
+                            Log.e(TAG, "Firebase authentication failed", e)
+                            return SignInResult(
+                                data = null,
+                                errorMessage = "Firebase authentication error: ${e.message}",
                             )
-
-                        println("Firebase credential: $firebaseCredential")
-
-                        val authResult = auth.signInWithCredential(firebaseCredential).await()
-                        Result.success(authResult.user!!)
+                        }
                     } else {
-                        Result.failure(Exception("Unexpected credential type"))
+                        Log.e(TAG, "Failed to extract Google ID token from credential")
+                        return SignInResult(
+                            data = null,
+                            errorMessage = "Could not extract Google ID token from credential",
+                        )
                     }
                 }
-                else -> Result.failure(Exception("Unexpected credential type"))
+                else -> {
+                    Log.e(TAG, "Unexpected credential type: ${credential.type}")
+                    return SignInResult(
+                        data = null,
+                        errorMessage = "No Google ID token found in response (type: ${credential.type})",
+                    )
+                }
             }
         } catch (e: GetCredentialException) {
-            Result.failure(e)
-        } catch (e: GoogleIdTokenParsingException) {
-            Result.failure(e)
-        } catch (e: CancellationException) {
-            throw e
+            Log.e(TAG, "Credential manager exception", e)
+            SignInResult(
+                data = null,
+                errorMessage = "Sign in failed: ${e.message}",
+            )
         } catch (e: Exception) {
-            Result.failure(e)
+            Log.e(TAG, "Unexpected exception during sign in", e)
+            SignInResult(
+                data = null,
+                errorMessage = "Unexpected error: ${e.message}",
+            )
         }
     }
 
-    fun getSignedInUser(): FirebaseUser? = auth.currentUser
+    fun getSignedInUser(): FirebaseUser? {
+        val currentUser = auth.currentUser
+        Log.d(TAG, "Current user: ${currentUser?.uid ?: "none"}")
+        return currentUser
+    }
 
     suspend fun signOut() {
-        auth.signOut()
+        try {
+            Log.d(TAG, "Signing out user")
+            oneTapClient.signOut().await()
+            auth.signOut()
+            Log.d(TAG, "Sign out completed successfully")
+        } catch (e: Exception) {
+            Log.e(TAG, "Error signing out", e)
+            throw e
+        }
     }
 }

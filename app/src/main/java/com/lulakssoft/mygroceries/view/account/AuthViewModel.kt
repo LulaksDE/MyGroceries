@@ -29,15 +29,13 @@ class AuthViewModel(
         println("Signing in")
         viewModelScope.launch {
             try {
-                authClient.signIn().fold(
-                    onSuccess = { authenticatedUser ->
-                        user = authenticatedUser
-                        errorMessage = null
-                    },
-                    onFailure = { error ->
-                        errorMessage = error.message ?: "Unknown error occurred"
-                    },
-                )
+                val result = authClient.signIn()
+                if (result.data != null) {
+                    checkCurrentUser() // Refresh the user
+                    errorMessage = null
+                } else {
+                    errorMessage = result.errorMessage ?: "Unknown error occurred"
+                }
             } catch (e: Exception) {
                 errorMessage = e.message ?: "Unknown error occurred"
             }

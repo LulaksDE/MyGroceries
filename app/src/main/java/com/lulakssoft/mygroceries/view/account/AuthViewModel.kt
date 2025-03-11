@@ -1,56 +1,66 @@
 package com.lulakssoft.mygroceries.view.account
 
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.firebase.auth.FirebaseUser
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class AuthViewModel(
-    private val authClient: GoogleAuthUiClient,
+    private val googleAuthUiClient: GoogleAuthUiClient,
 ) : ViewModel() {
-    var user by mutableStateOf<FirebaseUser?>(null)
-        private set
+    private val _authState = MutableStateFlow<AuthState>(AuthState.Idle)
+    val authState = _authState.asStateFlow()
 
-    var errorMessage by mutableStateOf<String?>(null)
-        private set
+    fun resetState() {
+        _authState.value = AuthState.Idle
+    }
+
+    fun signInAnonymously() =
+        viewModelScope.launch {
+            _authState.value = AuthState.Loading
+            try {
+                _authState.value = AuthState.Error("Anonymous sign in failed")
+            } catch (e: Exception) {
+                _authState.value = AuthState.Error("Error: ${e.message}")
+            }
+        }
+
+    fun signIn() =
+        viewModelScope.launch {
+            _authState.value = AuthState.Loading
+
+            val signInResult = googleAuthUiClient.signIn()
+
+            // Ensure we're updating state properly
+            _authState.value =
+                if (signInResult.data != null) {
+                    AuthState.Authenticated(signInResult.data)
+                } else {
+                    AuthState.Error(signInResult.errorMessage ?: "Unknown error")
+                }
+        }
 
     init {
-        checkCurrentUser()
-    }
-
-    private fun checkCurrentUser() {
-        user = authClient.getSignedInUser()
-    }
-
-    fun signIn() {
-        println("Signing in")
-        viewModelScope.launch {
-            try {
-                val result = authClient.signIn()
-                if (result.data != null) {
-                    checkCurrentUser() // Refresh the user
-                    errorMessage = null
-                } else {
-                    errorMessage = result.errorMessage ?: "Unknown error occurred"
-                }
-            } catch (e: Exception) {
-                errorMessage = e.message ?: "Unknown error occurred"
-            }
+        // Check if already signed in
+        googleAuthUiClient.getSignedInUser()?.let { user ->
+            _authState.value = AuthState.Authenticated(user.toUserData())
         }
     }
+}
 
-    fun signOut() {
-        viewModelScope.launch {
-            try {
-                authClient.signOut()
-                user = null
-                errorMessage = null
-            } catch (e: Exception) {
-                errorMessage = e.message ?: "Logout failed"
-            }
-        }
-    }
+sealed class AuthState {
+    object Idle : AuthState()
+
+    object Loading : AuthState()
+
+    data class Authenticated(
+        val userData: UserData,
+    ) : AuthState()
+
+    data class Error(
+        val message: String,
+    ) : AuthState()
 }

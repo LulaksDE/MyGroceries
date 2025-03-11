@@ -201,7 +201,13 @@ fun MainView(viewModel: MainViewModel) {
                     composable("signin") {
                         SignInScreen(
                             viewModel = signInViewModel,
-                            errorMessage = signInViewModel.errorMessage,
+                            onAuthSuccess = {
+                                // Navigate to home screen after successful authentication
+                                navController.navigate("householdView") {
+                                    popUpTo("signin") { inclusive = true }
+                                    launchSingleTop = true
+                                }
+                            },
                         )
                     }
                 }

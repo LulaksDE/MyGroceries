@@ -14,7 +14,6 @@ enum class BottomBarNavigationView {
     Household,
     Products,
     Scanner,
-    SignIn,
 }
 
 @Composable
@@ -55,17 +54,6 @@ fun BottomBar(
             label = { Text("Scanner") },
             selected = currentView == BottomBarNavigationView.Scanner,
             onClick = { onNavigate(BottomBarNavigationView.Scanner) },
-        )
-        NavigationBarItem(
-            icon = {
-                Icon(
-                    imageVector = Icons.Default.ShoppingCart,
-                    contentDescription = "Sign In",
-                )
-            },
-            label = { Text("Sign In") },
-            selected = currentView == BottomBarNavigationView.SignIn,
-            onClick = { onNavigate(BottomBarNavigationView.SignIn) },
         )
     }
 }

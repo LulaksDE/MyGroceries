@@ -4,15 +4,20 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 
 class AuthViewModel(
     private val googleAuthUiClient: GoogleAuthUiClient,
 ) : ViewModel() {
     private val _authState = MutableStateFlow<AuthState>(AuthState.Idle)
     val authState = _authState.asStateFlow()
+
+    private val auth = Firebase.auth
 
     fun resetState() {
         _authState.value = AuthState.Idle
@@ -22,9 +27,21 @@ class AuthViewModel(
         viewModelScope.launch {
             _authState.value = AuthState.Loading
             try {
-                _authState.value = AuthState.Error("Anonymous sign in failed")
+                val result = auth.signInAnonymously().await()
+                result.user?.let { user ->
+                    _authState.value =
+                        AuthState.Authenticated(
+                            UserData(
+                                userId = user.uid,
+                                username = "Guest",
+                                profilePictureUrl = null,
+                            ),
+                        )
+                } ?: run {
+                    _authState.value = AuthState.Error("Anonyme Anmeldung fehlgeschlagen")
+                }
             } catch (e: Exception) {
-                _authState.value = AuthState.Error("Error: ${e.message}")
+                _authState.value = AuthState.Error("Fehler: ${e.message}")
             }
         }
 

@@ -42,9 +42,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.lulakssoft.mygroceries.R
-import com.lulakssoft.mygroceries.view.account.AuthViewModel
 import com.lulakssoft.mygroceries.view.account.GoogleAuthUiClient
-import com.lulakssoft.mygroceries.view.account.SignInScreen
 import com.lulakssoft.mygroceries.view.home.HouseholdView
 import com.lulakssoft.mygroceries.view.home.HouseholdViewModel
 import com.lulakssoft.mygroceries.view.products.ProductsView
@@ -59,8 +57,6 @@ fun MainView(viewModel: MainViewModel) {
     val context = LocalContext.current
 
     val authClient = remember { GoogleAuthUiClient(context) }
-    val signInViewModel = viewModel { AuthViewModel(authClient) }
-
     val householdViewModel = remember { HouseholdViewModel(viewModel.productRepository, authClient) }
     val productsViewModel = remember { ProductsViewModel(viewModel.productRepository) }
     val scannerViewModel = remember { ScannerViewModel(viewModel.productRepository) }
@@ -130,7 +126,6 @@ fun MainView(viewModel: MainViewModel) {
                             "householdView" -> BottomBarNavigationView.Household
                             "productsView" -> BottomBarNavigationView.Products
                             "scannerView" -> BottomBarNavigationView.Scanner
-                            "signin" -> BottomBarNavigationView.SignIn
                             else -> BottomBarNavigationView.Household
                         },
                     onNavigate = { view ->
@@ -139,7 +134,6 @@ fun MainView(viewModel: MainViewModel) {
                                 BottomBarNavigationView.Household -> "householdView"
                                 BottomBarNavigationView.Products -> "productsView"
                                 BottomBarNavigationView.Scanner -> "scannerView"
-                                BottomBarNavigationView.SignIn -> "signin"
                             }
                         if (currentRoute != targetRoute) {
                             navController.navigate(targetRoute) {
@@ -191,18 +185,6 @@ fun MainView(viewModel: MainViewModel) {
                     }
                     composable(route = "scannerView") {
                         ScannerView(scannerViewModel)
-                    }
-                    composable("signin") {
-                        SignInScreen(
-                            viewModel = signInViewModel,
-                            onAuthSuccess = {
-                                // Navigate to home screen after successful authentication
-                                navController.navigate("householdView") {
-                                    popUpTo("signin") { inclusive = true }
-                                    launchSingleTop = true
-                                }
-                            },
-                        )
                     }
                 }
             }

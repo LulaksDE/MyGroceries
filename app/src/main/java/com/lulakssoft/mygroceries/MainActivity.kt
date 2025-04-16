@@ -44,6 +44,9 @@ fun MyGroceriesApp() {
 
     when (authState) {
         is AuthState.Authenticated -> {
+            // Pass authenticated user to MainView
+            val userData = (authState as AuthState.Authenticated).userData
+            mainViewModel.setCurrentUser(userData)
             MainView(mainViewModel)
         }
         else -> {

@@ -1,8 +1,10 @@
 package com.lulakssoft.mygroceries.database.product
 
+import kotlinx.coroutines.flow.Flow
+
 class ProductRepository(
-    private val productDao: ProductDao,
-    private val householdDao: HouseholdDao,
+    val productDao: ProductDao,
+    val householdDao: HouseholdDao,
 ) {
     val allProducts = productDao.selectAllProductsSortedByName()
     val allHouseholds = householdDao.selectAllHouseholdsSortedByName()
@@ -14,6 +16,10 @@ class ProductRepository(
     suspend fun insertHousehold(household: Household) {
         householdDao.insertHousehold(household)
     }
+
+    suspend fun getHouseholdById(householdId: Int): Household? = householdDao.getHouseholdById(householdId)
+
+    suspend fun getHouseholdsByUserId(userId: String): Flow<List<Household>> = householdDao.getHouseholdsByUserId(userId)
 
     suspend fun deleteProduct(product: Product) {
         productDao.delete(product)

@@ -11,8 +11,11 @@ import java.time.LocalDateTime
 @Entity(tableName = "household_table")
 data class Household(
     @PrimaryKey(autoGenerate = true)
-    val id: Int,
+    val id: Int = 0,
     val householdName: String,
+    val createdByUserId: String,
+    val createdAt: LocalDateTime = LocalDateTime.now(),
+    val isPrivate: Boolean = false,
 )
 
 @Entity(

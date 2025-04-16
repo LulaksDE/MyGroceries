@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
@@ -58,6 +59,14 @@ fun HouseholdView(viewModel: HouseholdViewModel) {
                     }
                 }
             }
+        }
+        Text("User ID: ${userData?.userId ?: "Keine ID"}")
+        Text("Aktuelle Haushalte: ${viewModel.userHouseholds.collectAsState(initial = emptyList()).value.size}")
+        Button(
+            onClick = { /* Hier Navigation zum Management */ },
+            modifier = Modifier.fillMaxWidth().padding(16.dp),
+        ) {
+            Text("Haushaltsverwaltung öffnen")
         }
     }
 }

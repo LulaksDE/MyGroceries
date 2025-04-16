@@ -134,4 +134,6 @@ class GoogleAuthUiClient(
             throw e
         }
     }
+
+    fun getContext(): Context = context
 }

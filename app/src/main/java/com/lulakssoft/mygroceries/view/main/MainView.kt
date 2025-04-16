@@ -20,7 +20,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -42,9 +41,14 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.lulakssoft.mygroceries.R
+import com.lulakssoft.mygroceries.database.household.HouseholdRepository
+import com.lulakssoft.mygroceries.database.product.DatabaseApp
+import com.lulakssoft.mygroceries.dataservice.FirestoreManager
 import com.lulakssoft.mygroceries.view.account.GoogleAuthUiClient
 import com.lulakssoft.mygroceries.view.home.HouseholdView
 import com.lulakssoft.mygroceries.view.home.HouseholdViewModel
+import com.lulakssoft.mygroceries.view.management.HouseholdManagementView
+import com.lulakssoft.mygroceries.view.management.HouseholdManagementViewModel
 import com.lulakssoft.mygroceries.view.products.ProductsView
 import com.lulakssoft.mygroceries.view.products.ProductsViewModel
 import com.lulakssoft.mygroceries.view.scanner.ScannerView
@@ -55,6 +59,7 @@ import com.lulakssoft.mygroceries.view.scanner.ScannerViewModel
 fun MainView(viewModel: MainViewModel) {
     val navController = rememberNavController()
     val context = LocalContext.current
+    val databaseApp = remember { DatabaseApp.getInstance(context) }
 
     val authClient = remember { GoogleAuthUiClient(context) }
     val householdViewModel = remember { HouseholdViewModel(viewModel.productRepository, authClient) }
@@ -67,6 +72,18 @@ fun MainView(viewModel: MainViewModel) {
 
     val currentBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = currentBackStackEntry?.destination?.route
+
+    val householdRepository =
+        remember {
+            HouseholdRepository(
+                viewModel.productRepository.householdDao,
+                databaseApp.householdMemberDao,
+                databaseApp.householdInvitationDao,
+                FirestoreManager(),
+            )
+        }
+
+    val householdManagementViewModel = HouseholdManagementViewModel(householdRepository)
 
     Scaffold(
         topBar = {
@@ -116,7 +133,7 @@ fun MainView(viewModel: MainViewModel) {
         },
         bottomBar = {
             AnimatedVisibility(
-                visible = selectedHousehold.value.isNotEmpty(),
+                visible = true,
                 enter = slideInVertically(initialOffsetY = { it }),
                 exit = slideOutVertically(targetOffsetY = { it }),
             ) {
@@ -149,43 +166,24 @@ fun MainView(viewModel: MainViewModel) {
         Column(
             modifier = Modifier.padding(innerPadding).fillMaxSize(),
         ) {
-            if (selectedHousehold.value.isEmpty()) {
-                Text(
-                    "Bitte wählen Sie einen Haushalt aus!",
-                    modifier =
-                        Modifier
-                            .padding(16.dp)
-                            .align(Alignment.CenterHorizontally),
-                )
-                TextField(
-                    value = viewModel.householdText,
-                    onValueChange = { viewModel.householdText = it },
-                    label = { Text("Haushalt eingabe") },
-                    modifier =
-                        Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                )
-                Button(
-                    onClick = {
-                        viewModel.insert()
-                    },
-                    modifier =
-                        Modifier
-                            .padding(5.dp)
-                            .align(Alignment.CenterHorizontally),
-                ) { Text("Haushalt hinzufügen") }
-            } else {
-                NavHost(navController, "householdView") {
-                    composable(route = "householdView") {
-                        HouseholdView(householdViewModel)
-                    }
-                    composable(route = "productsView") {
-                        ProductsView(productsViewModel)
-                    }
-                    composable(route = "scannerView") {
-                        ScannerView(scannerViewModel)
-                    }
+            Button(
+                onClick = { navController.navigate("householdManagementView") },
+                modifier = Modifier.fillMaxWidth().padding(16.dp),
+            ) {
+                Text("Haushaltsverwaltung öffnen")
+            }
+            NavHost(navController, "householdView") {
+                composable(route = "householdView") {
+                    HouseholdView(householdViewModel)
+                }
+                composable(route = "productsView") {
+                    ProductsView(productsViewModel)
+                }
+                composable(route = "scannerView") {
+                    ScannerView(scannerViewModel)
+                }
+                composable(route = "householdManagementView") {
+                    HouseholdManagementView(householdManagementViewModel)
                 }
             }
         }

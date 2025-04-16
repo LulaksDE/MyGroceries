@@ -18,7 +18,7 @@ class MainViewModel : ViewModel() {
     var householdText by mutableStateOf("Toller Haushalt")
     lateinit var households: Flow<List<Household>>
     lateinit var products: Flow<List<Product>>
-    var selectedHousehold by mutableStateOf(Household(0, ""))
+    var selectedHousehold by mutableStateOf(Household(0, "", ""))
 
     fun initialize(databaseApp: DatabaseApp) {
         this.productRepository = ProductRepository(databaseApp.productDao, databaseApp.householdDao)
@@ -28,7 +28,7 @@ class MainViewModel : ViewModel() {
 
     fun insert() =
         viewModelScope.launch {
-            productRepository.insertHousehold(Household(0, householdText))
+            productRepository.insertHousehold(Household(0, householdText, ""))
             householdText = ""
         }
 

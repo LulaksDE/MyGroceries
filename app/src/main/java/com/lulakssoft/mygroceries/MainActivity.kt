@@ -42,12 +42,16 @@ fun MyGroceriesApp() {
     val mainViewModel = viewModel<MainViewModel>()
     mainViewModel.initialize(DatabaseApp.getInstance(context))
 
+    val onSignOut: () -> Unit = {
+        authViewModel.resetState()
+    }
+
     when (authState) {
         is AuthState.Authenticated -> {
             // Pass authenticated user to MainView
             val userData = (authState as AuthState.Authenticated).userData
             mainViewModel.setCurrentUser(userData)
-            MainView(mainViewModel)
+            MainView(mainViewModel, onSignOut)
         }
         else -> {
             SignInScreen(

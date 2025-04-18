@@ -70,6 +70,12 @@ interface HouseholdMemberDao {
         memberId: Int,
         newRole: MemberRole,
     )
+
+    @Query("SELECT * FROM household_member_table WHERE householdId = :householdId AND userId = :userId LIMIT 1")
+    suspend fun getMemberInHousehold(
+        householdId: Int,
+        userId: String,
+    ): HouseholdMember?
 }
 
 @Dao

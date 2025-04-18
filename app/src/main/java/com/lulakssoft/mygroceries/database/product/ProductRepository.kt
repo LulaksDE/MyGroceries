@@ -5,6 +5,7 @@ import kotlinx.coroutines.flow.Flow
 class ProductRepository(
     val productDao: ProductDao,
     val householdDao: HouseholdDao,
+    val memberDao: HouseholdMemberDao,
 ) {
     val allProducts = productDao.selectAllProductsSortedByName()
     val allHouseholds = householdDao.selectAllHouseholdsSortedByName()
@@ -16,6 +17,8 @@ class ProductRepository(
     suspend fun insertHousehold(household: Household) {
         householdDao.insertHousehold(household)
     }
+
+    suspend fun insertHouseholdAndGetId(household: Household): Long = householdDao.insertHouseholdAndGetId(household)
 
     suspend fun getHouseholdById(householdId: Int): Household? = householdDao.getHouseholdById(householdId)
 

@@ -1,5 +1,6 @@
 package com.lulakssoft.mygroceries.view.management
 
+import android.content.Intent
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -19,16 +20,42 @@ class HouseholdManagementViewModel(
 ) : ViewModel() {
     var invitationCode by mutableStateOf("")
     var joinHouseholdResult by mutableStateOf<JoinResult?>(null)
+    var selectedHouseholdId by mutableStateOf(0)
 
     fun createHousehold(name: String) =
         viewModelScope.launch {
             repository.createHousehold(name)
         }
 
-    fun generateInvitationCode(householdId: Int) =
+    fun generateInvitationCode(
+        householdId: Int,
+        onCodeGenerated: (String) -> Unit,
+    ) {
         viewModelScope.launch {
-            invitationCode = repository.generateInvitationCode(householdId)
+            try {
+                val invitationCode = repository.generateInvitationCode(householdId)
+                onCodeGenerated(invitationCode)
+            } catch (e: Exception) {
+                // Handle the error, e.g., show a message to the user
+                onCodeGenerated("")
+            }
         }
+    }
+
+    fun shareInvitationCode(code: String) {
+        // Implementierung zum Teilen des Codes über die Android-Sharing-API
+        // Dies kann über eine Intent-Integration erfolgen
+        val intent =
+            Intent(Intent.ACTION_SEND).apply {
+                type = "text/plain"
+                putExtra(Intent.EXTRA_SUBJECT, "Einladung zum Haushalt")
+                putExtra(Intent.EXTRA_TEXT, "Hier ist dein Einladungscode: $code")
+            }
+
+        // Diese Methode benötigt Zugriff auf einen Context, der über einen ContextProvider oder ähnliches bereitgestellt werden sollte
+        // Um dieses vollständig zu implementieren, müsste man den Context an das ViewModel übergeben oder eine andere Architektur verwenden
+        // ContextCompat.startActivity(context, Intent.createChooser(intent, "Einladungscode teilen"), null)
+    }
 
     fun joinHouseholdByCode(code: String) =
         viewModelScope.launch {

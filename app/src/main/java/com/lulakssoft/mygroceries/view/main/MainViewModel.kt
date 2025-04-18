@@ -5,6 +5,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.lulakssoft.mygroceries.database.household.HouseholdMember
+import com.lulakssoft.mygroceries.database.household.MemberRole
 import com.lulakssoft.mygroceries.database.product.DatabaseApp
 import com.lulakssoft.mygroceries.database.product.Household
 import com.lulakssoft.mygroceries.database.product.ProductRepository
@@ -12,6 +14,7 @@ import com.lulakssoft.mygroceries.view.account.UserData
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.launch
+import java.time.LocalDateTime
 
 class MainViewModel : ViewModel() {
     private lateinit var _productRepository: ProductRepository
@@ -33,6 +36,7 @@ class MainViewModel : ViewModel() {
             ProductRepository(
                 databaseApp.productDao,
                 databaseApp.householdDao,
+                databaseApp.householdMemberDao,
             )
 
         // Wenn ein Benutzer gesetzt wurde, hole die Haushalte für diesen Benutzer
@@ -55,6 +59,20 @@ class MainViewModel : ViewModel() {
         viewModelScope.launch {
             // Benutze die ID des aktuellen Benutzers, wenn verfügbar
             val userId = currentUser?.userId ?: ""
-            productRepository.insertHousehold(Household(0, householdText, userId))
+            val householdId = productRepository.insertHouseholdAndGetId(Household(0, householdText, userId))
+
+            // Benutzer als Admin zum Haushalt hinzufügen
+            productRepository.householdDao.getHouseholdById(householdId.toInt())?.let { household ->
+                val member =
+                    HouseholdMember(
+                        id = 0,
+                        householdId = household.id,
+                        userId = userId,
+                        role = MemberRole.ADMIN,
+                        joinedAt = LocalDateTime.now(),
+                        userName = currentUser?.username ?: "Unknown",
+                    )
+                productRepository.memberDao.insertMember(member)
+            }
         }
 }

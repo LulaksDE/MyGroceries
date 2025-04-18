@@ -51,7 +51,6 @@ class HouseholdRepository(
         return householdId
     }
 
-    // Einladungscode generieren
     suspend fun generateInvitationCode(householdId: Int): String {
         val userId = currentUser?.uid ?: return ""
 
@@ -67,17 +66,33 @@ class HouseholdRepository(
             )
         invitationDao.createInvitation(invitation)
 
+        // Mit Firestore synchronisieren
+        firestoreManager.syncInvitation(invitation)
+
         return invitationCode
     }
 
-    // Einem Haushalt beitreten
     suspend fun joinHouseholdByCode(invitationCode: String): Boolean {
-        val invitation = invitationDao.getInvitationByCode(invitationCode) ?: return false
+        // Zuerst in lokaler Datenbank prüfen
+        val invitation = invitationDao.getInvitationByCode(invitationCode)
+
+        // Falls nicht in lokaler DB, in Firestore nachsehen
+        val firestoreInvitation =
+            if (invitation == null) {
+                firestoreManager.getInvitationByCode(invitationCode)
+            } else {
+                null
+            }
+
+        // Wenn keine Einladung gefunden wurde, fehlschlagen
+        if (invitation == null && firestoreInvitation == null) return false
+
+        val householdId = invitation?.householdId ?: firestoreInvitation?.get("householdId") as? Int ?: return false
         val userId = currentUser?.uid ?: return false
 
         // Prüfen, ob der Benutzer bereits Mitglied ist
         val userHouseholds = memberDao.getHouseholdsForUser(userId).first()
-        val isAlreadyMember = userHouseholds.any { it.householdId == invitation.householdId }
+        val isAlreadyMember = userHouseholds.any { it.householdId == householdId }
 
         if (isAlreadyMember) {
             // Benutzer ist bereits Mitglied
@@ -87,14 +102,26 @@ class HouseholdRepository(
         // Benutzer als neues Mitglied hinzufügen
         val newMember =
             HouseholdMember(
-                householdId = invitation.householdId,
+                householdId = householdId,
                 userId = userId,
                 userName = currentUser.displayName ?: "Gast",
                 role = MemberRole.MEMBER,
             )
         memberDao.insertMember(newMember)
+
+        // Mit Firestore synchronisieren
+        firestoreManager.syncNewMember(householdId, userId, "MEMBER")
+
+        // Einladung als verwendet markieren (optional)
+        firestoreManager.deactivateInvitation(invitationCode)
+
         return true
     }
+
+    suspend fun getUserMembershipInHousehold(
+        householdId: Int,
+        userId: String,
+    ): HouseholdMember? = memberDao.getMemberInHousehold(householdId, userId)
 
     // Haushalte für den aktuellen Benutzer abrufen
     fun getUserHouseholds() =

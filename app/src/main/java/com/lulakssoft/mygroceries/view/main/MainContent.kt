@@ -16,14 +16,19 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.lulakssoft.mygroceries.database.household.HouseholdRepository
 import com.lulakssoft.mygroceries.database.product.DatabaseApp
+import com.lulakssoft.mygroceries.dataservice.FirestoreManager
 import com.lulakssoft.mygroceries.view.account.GoogleAuthUiClient
 import com.lulakssoft.mygroceries.view.home.HouseholdView
 import com.lulakssoft.mygroceries.view.home.HouseholdViewModel
+import com.lulakssoft.mygroceries.view.management.HouseholdManagementView
+import com.lulakssoft.mygroceries.view.management.HouseholdManagementViewModel
 import com.lulakssoft.mygroceries.view.products.ProductsView
 import com.lulakssoft.mygroceries.view.products.ProductsViewModel
 import com.lulakssoft.mygroceries.view.scanner.ScannerView
@@ -36,13 +41,34 @@ fun MainContent(
     authClient: GoogleAuthUiClient,
     databaseApp: DatabaseApp,
     onOpenHouseholdSelection: () -> Unit,
+    onSignOut: () -> Unit,
 ) {
     val navController = rememberNavController()
     val context = LocalContext.current
 
-    val householdViewModel = remember { HouseholdViewModel(viewModel.productRepository, authClient) }
+    val householdViewModel =
+        remember {
+            HouseholdViewModel(viewModel.productRepository, authClient).apply {
+                setOnSignOutCallback(onSignOut)
+            }
+        }
     val productsViewModel = remember { ProductsViewModel(viewModel.productRepository) }
-    val scannerViewModel = remember { ScannerViewModel(viewModel.productRepository) }
+    val scannerViewModel =
+        remember {
+            ScannerViewModel(viewModel.productRepository).apply {
+                setCurrentHousehold(viewModel.selectedHousehold.id)
+            }
+        }
+
+    val householdRepository =
+        remember {
+            HouseholdRepository(
+                viewModel.productRepository.householdDao,
+                databaseApp.householdMemberDao,
+                databaseApp.householdInvitationDao,
+                FirestoreManager(),
+            )
+        }
 
     val currentBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = currentBackStackEntry?.destination?.route
@@ -99,13 +125,29 @@ fun MainContent(
             modifier = Modifier.padding(innerPadding),
         ) {
             composable(route = "householdView") {
-                HouseholdView(householdViewModel)
+                HouseholdView(
+                    householdViewModel.apply {
+                        updateSelectedHousehold(viewModel.selectedHousehold.id)
+                    },
+                    navigateToManagement = {
+                        navController.navigate("householdManagement")
+                    },
+                )
             }
             composable(route = "productsView") {
                 ProductsView(productsViewModel)
             }
             composable(route = "scannerView") {
                 ScannerView(scannerViewModel)
+            }
+            composable(route = "householdManagement") {
+                val managementViewModel =
+                    viewModel {
+                        HouseholdManagementViewModel(householdRepository).apply {
+                            selectedHouseholdId = viewModel.selectedHousehold.id
+                        }
+                    }
+                HouseholdManagementView(managementViewModel)
             }
         }
     }

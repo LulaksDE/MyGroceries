@@ -11,9 +11,13 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -26,14 +30,36 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.lulakssoft.mygroceries.database.household.MemberRole
 import java.time.LocalDate
 
 @Composable
-fun HouseholdView(viewModel: HouseholdViewModel) {
+fun HouseholdView(
+    viewModel: HouseholdViewModel,
+    navigateToManagement: () -> Unit,
+) {
     val userData by viewModel.userData.collectAsState()
     val userHouseholds by viewModel.userHouseholds.collectAsState(initial = emptyList())
+    val currentMember by viewModel.currentMemberRole.collectAsState()
 
-    Scaffold { padding ->
+    val canManageHousehold =
+        currentMember?.role == MemberRole.OWNER ||
+            currentMember?.role == MemberRole.ADMIN
+
+    Scaffold(
+        floatingActionButton = {
+            if (canManageHousehold) {
+                FloatingActionButton(onClick = navigateToManagement) {
+                    Icon(
+                        imageVector = Icons.Default.Settings,
+                        contentDescription = "Haushalt verwalten",
+                    )
+                }
+            } else {
+                Text("(You have the role ${currentMember?.role})")
+            }
+        },
+    ) { padding ->
         Column(
             modifier =
                 Modifier
@@ -44,29 +70,44 @@ fun HouseholdView(viewModel: HouseholdViewModel) {
         ) {
             // User profile section
             userData?.let { user ->
+                // In HouseholdView.kt - im userData-Card-Bereich erweitern
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
                 ) {
-                    Row(
+                    Column(
                         modifier =
                             Modifier
                                 .fillMaxWidth()
                                 .padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        // Profile image could be added here if available
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                        ) {
+                            Column {
+                                Text(
+                                    text = user.username ?: "Gast",
+                                    style = MaterialTheme.typography.titleMedium,
+                                )
+                                Text(
+                                    text = "Mitglied seit ${LocalDate.now().year}",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
 
-                        Column {
-                            Text(
-                                text = user.username ?: "Guest User",
-                                style = MaterialTheme.typography.titleMedium,
-                            )
-                            Text(
-                                text = "Member since ${LocalDate.now().year}",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
+                            Button(
+                                onClick = { viewModel.signOut() },
+                                colors =
+                                    ButtonDefaults.buttonColors(
+                                        containerColor = MaterialTheme.colorScheme.errorContainer,
+                                        contentColor = MaterialTheme.colorScheme.onErrorContainer,
+                                    ),
+                            ) {
+                                Text("Abmelden")
+                            }
                         }
                     }
                 }

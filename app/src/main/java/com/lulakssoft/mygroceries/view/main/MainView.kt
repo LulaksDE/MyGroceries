@@ -18,7 +18,10 @@ import com.lulakssoft.mygroceries.view.account.GoogleAuthUiClient
 import com.lulakssoft.mygroceries.view.home.HouseholdSelectionScreen
 
 @Composable
-fun MainView(viewModel: MainViewModel) {
+fun MainView(
+    viewModel: MainViewModel,
+    onSignOut: () -> Unit,
+) {
     val navController = rememberNavController()
     val context = LocalContext.current
     val databaseApp = remember { DatabaseApp.getInstance(context) }
@@ -67,6 +70,7 @@ fun MainView(viewModel: MainViewModel) {
                 onOpenHouseholdSelection = {
                     navController.navigate("householdSelection")
                 },
+                onSignOut = onSignOut,
             )
         }
     }

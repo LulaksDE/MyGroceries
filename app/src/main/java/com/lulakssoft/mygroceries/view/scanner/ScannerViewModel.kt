@@ -35,6 +35,12 @@ class ScannerViewModel(
     var productEntryDate by mutableStateOf(LocalDateTime.now())
     var productQuantity by mutableStateOf(1)
 
+    private var currentHouseholdId: Int = 0
+
+    fun setCurrentHousehold(householdId: Int) {
+        currentHouseholdId = householdId
+    }
+
     fun getProduct(barcode: String) {
         viewModelScope.launch {
             errorMessage = ""
@@ -72,7 +78,7 @@ class ScannerViewModel(
             repository.insertProduct(
                 Product(
                     0,
-                    1,
+                    currentHouseholdId, // Dynamische Haushalt-ID verwenden
                     product.product.name,
                     product.product.brand,
                     scannedCode,

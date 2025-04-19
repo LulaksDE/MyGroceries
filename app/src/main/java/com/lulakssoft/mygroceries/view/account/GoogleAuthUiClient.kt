@@ -119,7 +119,6 @@ class GoogleAuthUiClient(
 
     fun getSignedInUser(): FirebaseUser? {
         val currentUser = auth.currentUser
-        Log.d(TAG, "Current user: ${currentUser?.uid ?: "none"}")
         return currentUser
     }
 

@@ -1,16 +1,15 @@
 package com.lulakssoft.mygroceries.dataservice
 
+import android.util.Log
 import com.google.firebase.firestore.FirebaseFirestore
 import com.lulakssoft.mygroceries.database.household.HouseholdInvitation
 import com.lulakssoft.mygroceries.database.product.Household
 import kotlinx.coroutines.tasks.await
-import java.util.logging.Logger
 
 class FirestoreManager {
     private val firestore = FirebaseFirestore.getInstance()
     private val householdCollection = firestore.collection("households")
     private val invitationCollection = firestore.collection("invitations")
-    private val logger = Logger.getLogger(FirestoreManager::class.java.name)
 
     // Synchronize household with Firebase Firestore
     suspend fun syncHousehold(household: Household) {
@@ -27,9 +26,9 @@ class FirestoreManager {
                 .document(household.id.toString())
                 .set(householdData)
                 .await()
-            logger.info("Household ${household.id} synchronized to Firestore")
+            Log.d("FirestoreManager", "Household synchronized to Firestore")
         } catch (e: Exception) {
-            logger.severe("Failed to sync household: ${e.message}")
+            Log.e("FirestoreManager", "Failed to sync household: ${e.message}")
         }
     }
 
@@ -49,9 +48,9 @@ class FirestoreManager {
                 .document(invitation.invitationCode)
                 .set(invitationData)
                 .await()
-            logger.info("Invitation code ${invitation.invitationCode} synchronized to Firestore")
+            Log.d("FirestoreManager", "Invitation synchronized to Firestore")
         } catch (e: Exception) {
-            logger.severe("Failed to sync invitation: ${e.message}")
+            Log.e("FirestoreManager", "Failed to sync invitation: ${e.message}")
         }
     }
 
@@ -60,14 +59,14 @@ class FirestoreManager {
         try {
             val document = invitationCollection.document(code).get().await()
             if (document.exists()) {
-                logger.info("Invitation found in Firestore: $code")
+                Log.d("FirestoreManager", "Invitation found in Firestore: $code")
                 document.data
             } else {
-                logger.info("Invitation not found in Firestore: $code")
+                Log.d("FirestoreManager", "Invitation not found in Firestore: $code")
                 null
             }
         } catch (e: Exception) {
-            logger.severe("Error getting invitation: ${e.message}")
+            Log.e("FirestoreManager", "Failed to get invitation from Firestore: ${e.message}")
             null
         }
 
@@ -78,9 +77,9 @@ class FirestoreManager {
                 .document(code)
                 .update("isActive", false)
                 .await()
-            logger.info("Invitation deactivated: $code")
+            Log.d("FirestoreManager", "Invitation deactivated in Firestore: $code")
         } catch (e: Exception) {
-            logger.severe("Failed to deactivate invitation: ${e.message}")
+            Log.e("FirestoreManager", "Failed to deactivate invitation in Firestore: ${e.message}")
         }
     }
 
@@ -105,9 +104,9 @@ class FirestoreManager {
                 .document(userId)
                 .set(memberData)
                 .await()
-            logger.info("Member $userId added to household $householdId in Firestore")
+            Log.d("FirestoreManager", "New member synchronized to Firestore")
         } catch (e: Exception) {
-            logger.severe("Failed to sync new member: ${e.message}")
+            Log.e("FirestoreManager", "Failed to sync new member: ${e.message}")
         }
     }
 }

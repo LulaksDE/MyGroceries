@@ -5,6 +5,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.lulakssoft.mygroceries.database.household.Household
 import com.lulakssoft.mygroceries.database.household.HouseholdInvitation
 import kotlinx.coroutines.tasks.await
+import java.time.LocalDateTime
 
 class FirestoreManager {
     private val firestore = FirebaseFirestore.getInstance()
@@ -13,19 +14,22 @@ class FirestoreManager {
 
     // Synchronize household with Firebase Firestore
     suspend fun syncHousehold(household: Household) {
-        val householdData =
-            hashMapOf(
-                "id" to household.id,
-                "householdName" to household.householdName,
-                "createdByUserId" to household.createdByUserId,
-                "createdAt" to household.createdAt.toString(),
-            )
-
         try {
+            val householdData =
+                hashMapOf(
+                    "id" to household.id,
+                    "householdName" to household.householdName,
+                    "createdByUserId" to household.createdByUserId,
+                    "createdAt" to household.createdAt.toString(),
+                    "isPrivate" to household.isPrivate,
+                )
+
             householdCollection
                 .document(household.id.toString())
                 .set(householdData)
                 .await()
+
+            syncNewMember(household.id, household.createdByUserId, "OWNER")
             Log.d("FirestoreManager", "Household synchronized to Firestore")
         } catch (e: Exception) {
             Log.e("FirestoreManager", "Failed to sync household: ${e.message}")
@@ -91,10 +95,9 @@ class FirestoreManager {
     ) {
         val memberData =
             hashMapOf(
-                "householdId" to householdId,
                 "userId" to userId,
                 "role" to role,
-                "joinedAt" to System.currentTimeMillis(),
+                "joinedAt" to LocalDateTime.now(),
             )
 
         try {

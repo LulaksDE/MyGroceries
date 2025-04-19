@@ -22,11 +22,6 @@ class HouseholdManagementViewModel(
     var joinHouseholdResult by mutableStateOf<JoinResult?>(null)
     var selectedHouseholdId by mutableStateOf(0)
 
-    fun createHousehold(name: String) =
-        viewModelScope.launch {
-            repository.createHousehold(name)
-        }
-
     fun generateInvitationCode(
         householdId: Int,
         onCodeGenerated: (String) -> Unit,

@@ -5,10 +5,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.lulakssoft.mygroceries.database.household.Household
 import com.lulakssoft.mygroceries.database.household.HouseholdMember
+import com.lulakssoft.mygroceries.database.household.HouseholdRepository
 import com.lulakssoft.mygroceries.database.household.MemberRole
 import com.lulakssoft.mygroceries.database.product.DatabaseApp
-import com.lulakssoft.mygroceries.database.product.Household
 import com.lulakssoft.mygroceries.database.product.ProductRepository
 import com.lulakssoft.mygroceries.view.account.UserData
 import kotlinx.coroutines.flow.Flow
@@ -20,6 +21,10 @@ class MainViewModel : ViewModel() {
     private lateinit var _productRepository: ProductRepository
     val productRepository: ProductRepository
         get() = _productRepository
+
+    private lateinit var _householdRepository: HouseholdRepository
+    val householdRepository: HouseholdRepository
+        get() = _householdRepository
 
     var householdText by mutableStateOf("")
     var selectedHousehold by mutableStateOf(Household(0, "", ""))
@@ -35,14 +40,18 @@ class MainViewModel : ViewModel() {
         _productRepository =
             ProductRepository(
                 databaseApp.productDao,
+            )
+        _householdRepository =
+            HouseholdRepository(
                 databaseApp.householdDao,
                 databaseApp.householdMemberDao,
+                databaseApp.householdInvitationDao,
             )
 
         // Wenn ein Benutzer gesetzt wurde, hole die Haushalte für diesen Benutzer
         currentUser?.let { user ->
             viewModelScope.launch {
-                _households.value = productRepository.getHouseholdsByUserId(user.userId)
+                _households.value = householdRepository.getHouseholdsByUserId(user.userId)
             }
         }
     }
@@ -51,7 +60,7 @@ class MainViewModel : ViewModel() {
         currentUser = userData
         // Aktualisiere die Haushalte für den neuen Benutzer
         viewModelScope.launch {
-            _households.value = productRepository.getHouseholdsByUserId(userData.userId)
+            _households.value = householdRepository.getHouseholdsByUserId(userData.userId)
         }
     }
 
@@ -59,10 +68,10 @@ class MainViewModel : ViewModel() {
         viewModelScope.launch {
             // Benutze die ID des aktuellen Benutzers, wenn verfügbar
             val userId = currentUser?.userId ?: ""
-            val householdId = productRepository.insertHouseholdAndGetId(Household(0, householdText, userId))
+            val householdId = householdRepository.insertHouseholdAndGetId(Household(0, householdText, userId))
 
             // Benutzer als Admin zum Haushalt hinzufügen
-            productRepository.householdDao.getHouseholdById(householdId.toInt())?.let { household ->
+            householdRepository.householdDao.getHouseholdById(householdId.toInt())?.let { household ->
                 val member =
                     HouseholdMember(
                         id = 0,
@@ -72,7 +81,7 @@ class MainViewModel : ViewModel() {
                         joinedAt = LocalDateTime.now(),
                         userName = currentUser?.username ?: "Unknown",
                     )
-                productRepository.memberDao.insertMember(member)
+                householdRepository.memberDao.insertMember(member)
             }
         }
 }

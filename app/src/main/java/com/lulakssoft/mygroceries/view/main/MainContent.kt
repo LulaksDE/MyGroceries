@@ -23,7 +23,6 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.lulakssoft.mygroceries.database.household.HouseholdRepository
 import com.lulakssoft.mygroceries.database.product.DatabaseApp
-import com.lulakssoft.mygroceries.dataservice.FirestoreManager
 import com.lulakssoft.mygroceries.view.account.GoogleAuthUiClient
 import com.lulakssoft.mygroceries.view.home.HouseholdView
 import com.lulakssoft.mygroceries.view.home.HouseholdViewModel
@@ -63,10 +62,9 @@ fun MainContent(
     val householdRepository =
         remember {
             HouseholdRepository(
-                viewModel.productRepository.householdDao,
+                databaseApp.householdDao,
                 databaseApp.householdMemberDao,
                 databaseApp.householdInvitationDao,
-                FirestoreManager(),
             )
         }
 

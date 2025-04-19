@@ -2,8 +2,8 @@ package com.lulakssoft.mygroceries.dataservice
 
 import android.util.Log
 import com.google.firebase.firestore.FirebaseFirestore
+import com.lulakssoft.mygroceries.database.household.Household
 import com.lulakssoft.mygroceries.database.household.HouseholdInvitation
-import com.lulakssoft.mygroceries.database.product.Household
 import kotlinx.coroutines.tasks.await
 
 class FirestoreManager {

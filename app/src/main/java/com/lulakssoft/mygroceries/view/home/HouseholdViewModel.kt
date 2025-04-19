@@ -7,7 +7,6 @@ import com.lulakssoft.mygroceries.database.household.HouseholdMember
 import com.lulakssoft.mygroceries.database.household.HouseholdRepository
 import com.lulakssoft.mygroceries.database.product.DatabaseApp
 import com.lulakssoft.mygroceries.database.product.ProductRepository
-import com.lulakssoft.mygroceries.dataservice.FirestoreManager
 import com.lulakssoft.mygroceries.view.account.GoogleAuthUiClient
 import com.lulakssoft.mygroceries.view.account.UserData
 import com.lulakssoft.mygroceries.view.account.toUserData
@@ -24,18 +23,12 @@ class HouseholdViewModel(
     val userData = _userData.asStateFlow()
     private var onSignOutCallback: (() -> Unit)? = null
 
-    // Hier die Firebase-Firestore-Instanz erstellen
-    private val firestoreManager = FirestoreManager()
-
-    // Den HouseholdRepository initialisieren
     private val householdRepository by lazy {
-        // Hole eine Instanz der Datenbank
         val databaseApp = DatabaseApp.getInstance(authClient.getContext())
         HouseholdRepository(
-            productRepository.householdDao,
+            databaseApp.householdDao,
             databaseApp.householdMemberDao,
             databaseApp.householdInvitationDao,
-            firestoreManager,
         )
     }
 

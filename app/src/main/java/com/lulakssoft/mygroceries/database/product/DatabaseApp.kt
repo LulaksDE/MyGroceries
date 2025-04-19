@@ -5,12 +5,16 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
+import com.lulakssoft.mygroceries.database.household.Household
+import com.lulakssoft.mygroceries.database.household.HouseholdDao
 import com.lulakssoft.mygroceries.database.household.HouseholdInvitation
+import com.lulakssoft.mygroceries.database.household.HouseholdInvitationDao
 import com.lulakssoft.mygroceries.database.household.HouseholdMember
+import com.lulakssoft.mygroceries.database.household.HouseholdMemberDao
 
 @Database(
     entities = [Product::class, Household::class, HouseholdMember::class, HouseholdInvitation::class],
-    version = 1, // Neue Version ohne Migration
+    version = 1,
     exportSchema = false,
 )
 @TypeConverters(Converters::class, ImageBitmapConverters::class)

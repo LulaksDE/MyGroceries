@@ -5,18 +5,9 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import com.lulakssoft.mygroceries.database.household.Household
 import java.time.LocalDate
 import java.time.LocalDateTime
-
-@Entity(tableName = "household_table")
-data class Household(
-    @PrimaryKey(autoGenerate = true)
-    val id: Int = 0,
-    val householdName: String,
-    val createdByUserId: String,
-    val createdAt: LocalDateTime = LocalDateTime.now(),
-    val isPrivate: Boolean = false,
-)
 
 @Entity(
     tableName = "product_table",

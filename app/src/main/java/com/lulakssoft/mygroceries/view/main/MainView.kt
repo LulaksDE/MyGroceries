@@ -12,8 +12,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.lulakssoft.mygroceries.database.household.Household
 import com.lulakssoft.mygroceries.database.product.DatabaseApp
-import com.lulakssoft.mygroceries.database.product.Household
 import com.lulakssoft.mygroceries.view.account.GoogleAuthUiClient
 import com.lulakssoft.mygroceries.view.home.HouseholdSelectionScreen
 

@@ -1,22 +1,27 @@
 package com.lulakssoft.mygroceries.database.household
 
 import com.google.firebase.auth.FirebaseAuth
-import com.lulakssoft.mygroceries.database.product.Household
-import com.lulakssoft.mygroceries.database.product.HouseholdDao
-import com.lulakssoft.mygroceries.database.product.HouseholdInvitationDao
-import com.lulakssoft.mygroceries.database.product.HouseholdMemberDao
 import com.lulakssoft.mygroceries.dataservice.FirestoreManager
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import java.time.LocalDateTime
 import java.util.UUID
 
 class HouseholdRepository(
-    private val householdDao: HouseholdDao,
-    private val memberDao: HouseholdMemberDao,
+    val householdDao: HouseholdDao,
+    val memberDao: HouseholdMemberDao,
     private val invitationDao: HouseholdInvitationDao,
-    private val firestoreManager: FirestoreManager,
 ) {
+    private val firestoreManager = FirestoreManager()
     val currentUser = FirebaseAuth.getInstance().currentUser
+
+    suspend fun insertHouseholdAndGetId(household: Household): Long = householdDao.insertHouseholdAndGetId(household)
+
+    fun getHouseholdsByUserId(userId: String): Flow<List<Household>> = householdDao.getHouseholdsByUserId(userId)
+
+    suspend fun deleteHousehold(household: Household) {
+        householdDao.delete(household)
+    }
 
     // Haushalt erstellen
     suspend fun createHousehold(name: String): Int {

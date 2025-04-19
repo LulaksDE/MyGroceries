@@ -4,7 +4,6 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
-import com.lulakssoft.mygroceries.database.product.Household
 import java.time.LocalDateTime
 
 enum class MemberRole {

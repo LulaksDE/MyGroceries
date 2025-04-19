@@ -43,10 +43,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.lulakssoft.mygroceries.R
+import com.lulakssoft.mygroceries.database.household.Household
 import com.lulakssoft.mygroceries.database.household.HouseholdRepository
 import com.lulakssoft.mygroceries.database.product.DatabaseApp
-import com.lulakssoft.mygroceries.database.product.Household
-import com.lulakssoft.mygroceries.dataservice.FirestoreManager
 import com.lulakssoft.mygroceries.view.account.GoogleAuthUiClient
 import com.lulakssoft.mygroceries.view.main.MainViewModel
 import com.lulakssoft.mygroceries.view.management.HouseholdManagementViewModel
@@ -62,10 +61,9 @@ fun HouseholdSelectionScreen(
     val householdRepository =
         remember {
             HouseholdRepository(
-                viewModel.productRepository.householdDao,
+                databaseApp.householdDao,
                 databaseApp.householdMemberDao,
                 databaseApp.householdInvitationDao,
-                FirestoreManager(),
             )
         }
 

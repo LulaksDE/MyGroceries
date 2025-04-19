@@ -1,6 +1,9 @@
 package com.lulakssoft.mygroceries.view.home
 
 import android.util.Log
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.lulakssoft.mygroceries.database.household.HouseholdMember
@@ -12,13 +15,13 @@ import com.lulakssoft.mygroceries.view.account.UserData
 import com.lulakssoft.mygroceries.view.account.toUserData
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.launch
 
 class HouseholdViewModel(
     private val productRepository: ProductRepository,
     private val authClient: GoogleAuthUiClient,
 ) : ViewModel() {
+    var memberCount by mutableStateOf(0)
     private val _userData = MutableStateFlow<UserData?>(null)
     val userData = _userData.asStateFlow()
     private var onSignOutCallback: (() -> Unit)? = null
@@ -68,9 +71,6 @@ class HouseholdViewModel(
             }
         }
     }
-
-    // Die fehlende userHouseholds-Variable
-    val userHouseholds = householdRepository.getUserHouseholds() ?: emptyFlow()
 
     init {
         // Benutzerdaten laden

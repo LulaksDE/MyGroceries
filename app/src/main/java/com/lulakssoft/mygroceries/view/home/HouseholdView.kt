@@ -39,7 +39,6 @@ fun HouseholdView(
     navigateToManagement: () -> Unit,
 ) {
     val userData by viewModel.userData.collectAsState()
-    val userHouseholds by viewModel.userHouseholds.collectAsState(initial = emptyList())
     val currentMember by viewModel.currentMemberRole.collectAsState()
 
     val canManageHousehold =
@@ -142,7 +141,7 @@ fun HouseholdView(
                         )
                         StatisticItem(
                             title = "Members",
-                            value = "${userHouseholds.size}",
+                            value = "${viewModel.memberCount}",
                             icon = Icons.Default.Person,
                             modifier = Modifier.weight(1f),
                         )

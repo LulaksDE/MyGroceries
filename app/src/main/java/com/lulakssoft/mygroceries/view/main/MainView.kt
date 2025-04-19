@@ -6,7 +6,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
@@ -32,7 +31,7 @@ fun MainView(
     val hasHouseholds = households.isNotEmpty()
 
     // Remember last selected household
-    val selectedHousehold = rememberSaveable { mutableStateOf<Household?>(null) }
+    val selectedHousehold = remember { mutableStateOf<Household?>(null) }
 
     // Route based on household selection
     LaunchedEffect(key1 = hasHouseholds) {

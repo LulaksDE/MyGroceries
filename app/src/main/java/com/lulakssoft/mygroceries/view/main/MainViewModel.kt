@@ -6,6 +6,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.lulakssoft.mygroceries.database.household.Household
+import com.lulakssoft.mygroceries.database.household.HouseholdMember
 import com.lulakssoft.mygroceries.database.household.HouseholdRepository
 import com.lulakssoft.mygroceries.database.product.DatabaseApp
 import com.lulakssoft.mygroceries.database.product.ProductRepository
@@ -32,6 +33,10 @@ class MainViewModel : ViewModel() {
     private var _households = mutableStateOf<Flow<List<Household>>>(emptyFlow())
     val households: Flow<List<Household>>
         get() = _households.value
+
+    private var _members = mutableStateOf<Flow<List<HouseholdMember>>>(emptyFlow())
+    val members: Flow<List<HouseholdMember>>
+        get() = _members.value
 
     fun initialize(databaseApp: DatabaseApp) {
         _productRepository =

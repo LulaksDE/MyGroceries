@@ -8,7 +8,7 @@ import java.time.LocalDateTime
 data class HouseholdInvitation(
     @PrimaryKey
     val invitationCode: String,
-    val householdId: Int,
+    val firestoreId: String,
     val createdByUserId: String,
     val createdAt: LocalDateTime = LocalDateTime.now(),
     val expiresAt: LocalDateTime = LocalDateTime.now().plusDays(7),

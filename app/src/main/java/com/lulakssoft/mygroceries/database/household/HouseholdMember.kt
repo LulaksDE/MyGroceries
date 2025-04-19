@@ -29,6 +29,7 @@ data class HouseholdMember(
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
     val householdId: Int,
+    val firestoreId: String,
     val userId: String,
     val userName: String,
     val role: MemberRole,

@@ -23,7 +23,11 @@ interface HouseholdDao {
     @Query("SELECT * FROM household_table WHERE id = :householdId")
     suspend fun getHouseholdById(householdId: Int): Household?
 
-    @Query("SELECT * FROM household_table WHERE createdByUserId = :userId")
+    @Query(
+        "SELECT * FROM household_table, household_member_table " +
+            "WHERE :userId = household_member_table.userId " +
+            "AND household_table.id = household_member_table.householdId",
+    )
     fun getHouseholdsByUserId(userId: String): Flow<List<Household>>
 
     @Insert
@@ -32,8 +36,8 @@ interface HouseholdDao {
 
 @Dao
 interface HouseholdMemberDao {
-    @Query("SELECT * FROM household_member_table WHERE householdId = :householdId")
-    fun getMembersForHousehold(householdId: Int): Flow<List<HouseholdMember>>
+    @Query("SELECT * FROM household_member_table WHERE firestoreId = :firestoreId")
+    fun getMembersForHousehold(firestoreId: String): Flow<List<HouseholdMember>>
 
     @Query("SELECT * FROM household_member_table WHERE userId = :userId")
     fun getHouseholdsForUser(userId: String): Flow<List<HouseholdMember>>
@@ -50,17 +54,17 @@ interface HouseholdMemberDao {
         newRole: MemberRole,
     )
 
-    @Query("SELECT * FROM household_member_table WHERE householdId = :householdId AND userId = :userId LIMIT 1")
+    @Query("SELECT * FROM household_member_table WHERE firestoreId = :firestoreId AND userId = :userId LIMIT 1")
     suspend fun getMemberInHousehold(
-        householdId: Int,
+        firestoreId: String,
         userId: String,
     ): HouseholdMember?
 }
 
 @Dao
 interface HouseholdInvitationDao {
-    @Query("SELECT * FROM household_invitation_table WHERE householdId = :householdId")
-    fun getInvitationsForHousehold(householdId: Int): Flow<List<HouseholdInvitation>>
+    @Query("SELECT * FROM household_invitation_table WHERE firestoreId = :firestoreId")
+    fun getInvitationsForHousehold(firestoreId: String): Flow<List<HouseholdInvitation>>
 
     @Query("SELECT * FROM household_invitation_table WHERE invitationCode = :code")
     suspend fun getInvitationByCode(code: String): HouseholdInvitation?

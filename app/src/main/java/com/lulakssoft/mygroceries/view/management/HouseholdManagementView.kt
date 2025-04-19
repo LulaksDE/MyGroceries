@@ -42,7 +42,8 @@ import com.lulakssoft.mygroceries.database.household.HouseholdMember
 fun HouseholdManagementView(viewModel: HouseholdManagementViewModel) {
     val context = LocalContext.current
     val householdId = viewModel.selectedHouseholdId
-    val members by viewModel.getHouseholdMembers(householdId).collectAsState(initial = emptyList())
+    val firestoreId = viewModel.selectedHouseholdFirestoreId
+    val members by viewModel.getHouseholdMembers(firestoreId).collectAsState(initial = emptyList())
 
     var showGenerateCodeDialog by remember { mutableStateOf(false) }
     var generatedCode by remember { mutableStateOf("") }
@@ -73,7 +74,7 @@ fun HouseholdManagementView(viewModel: HouseholdManagementViewModel) {
             Button(
                 onClick = {
                     showGenerateCodeDialog = true
-                    viewModel.generateInvitationCode(householdId) { code ->
+                    viewModel.generateInvitationCode(firestoreId) { code ->
                         generatedCode = code
                     }
                 },

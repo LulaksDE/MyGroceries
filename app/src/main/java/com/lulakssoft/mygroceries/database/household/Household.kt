@@ -12,4 +12,5 @@ data class Household(
     val createdByUserId: String,
     val createdAt: LocalDateTime = LocalDateTime.now(),
     val isPrivate: Boolean = false,
+    val firestoreId: String? = null,
 )

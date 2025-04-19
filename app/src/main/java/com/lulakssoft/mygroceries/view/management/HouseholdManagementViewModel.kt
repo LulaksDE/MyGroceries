@@ -1,6 +1,7 @@
 package com.lulakssoft.mygroceries.view.management
 
 import android.content.Intent
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -21,17 +22,23 @@ class HouseholdManagementViewModel(
     var invitationCode by mutableStateOf("")
     var joinHouseholdResult by mutableStateOf<JoinResult?>(null)
     var selectedHouseholdId by mutableStateOf(0)
+    var selectedHouseholdFirestoreId by mutableStateOf("")
 
     fun generateInvitationCode(
-        householdId: Int,
+        firestoreId: String,
         onCodeGenerated: (String) -> Unit,
     ) {
         viewModelScope.launch {
             try {
-                val invitationCode = repository.generateInvitationCode(householdId)
-                onCodeGenerated(invitationCode)
+                if (firestoreId.isNotEmpty()) {
+                    val invitationCode = repository.generateInvitationCode(firestoreId)
+                    onCodeGenerated(invitationCode)
+                } else {
+                    Log.d("HouseholdManagementViewModel", "FirestoreId is empty")
+                    onCodeGenerated("")
+                }
             } catch (e: Exception) {
-                // Handle the error, e.g., show a message to the user
+                Log.e("HouseholdManagementViewModel", "Error generating invitation code: ${e.message}")
                 onCodeGenerated("")
             }
         }
@@ -56,9 +63,10 @@ class HouseholdManagementViewModel(
         viewModelScope.launch {
             val result = repository.joinHouseholdByCode(code)
             joinHouseholdResult = if (result) JoinResult.Success else JoinResult.Failed
+            Log.d("HouseholdManagementViewModel", "Join result: $joinHouseholdResult")
         }
 
-    fun getHouseholdMembers(householdId: Int) = repository.getHouseholdMembers(householdId)
+    fun getHouseholdMembers(firestoreId: String) = repository.getHouseholdMembers(firestoreId)
 
     fun removeMemberFromHousehold(member: HouseholdMember) =
         viewModelScope.launch {

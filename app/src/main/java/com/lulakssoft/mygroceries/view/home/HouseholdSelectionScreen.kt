@@ -178,7 +178,7 @@ fun HouseholdSelectionScreen(
         )
     }
 
-    // Join Household Dialog
+    // Join Household Dialog and wait if join is successful
     if (showJoinHouseholdDialog) {
         AlertDialog(
             onDismissRequest = { showJoinHouseholdDialog = false },

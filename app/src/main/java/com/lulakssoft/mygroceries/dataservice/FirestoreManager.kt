@@ -14,34 +14,55 @@ class FirestoreManager {
 
     // Synchronize household with Firebase Firestore
     suspend fun syncHousehold(household: Household) {
+        if (household.firestoreId == null) {
+            Log.e("FirestoreManager", "Firestore ID is null, cannot sync household")
+            return
+        }
         try {
             val householdData =
                 hashMapOf(
-                    "id" to household.id,
                     "householdName" to household.householdName,
                     "createdByUserId" to household.createdByUserId,
                     "createdAt" to household.createdAt.toString(),
                     "isPrivate" to household.isPrivate,
+                    "firestoreId" to household.firestoreId,
                 )
 
             householdCollection
-                .document(household.id.toString())
+                .document(household.firestoreId)
                 .set(householdData)
                 .await()
 
-            syncNewMember(household.id, household.createdByUserId, "OWNER")
+            syncNewMember(household.firestoreId, household.createdByUserId, "OWNER")
             Log.d("FirestoreManager", "Household synchronized to Firestore")
         } catch (e: Exception) {
             Log.e("FirestoreManager", "Failed to sync household: ${e.message}")
         }
     }
 
+    // Get household from Firestore by ID
+    suspend fun getHouseholdById(id: String): Map<String, Any>? =
+        try {
+            val document = householdCollection.document(id).get().await()
+            if (document.exists()) {
+                Log.d("FirestoreManager", "Household found in Firestore: $id")
+                Log.d("FirestoreManager", "Household data: ${document.data}")
+                document.data
+            } else {
+                Log.d("FirestoreManager", "Household not found in Firestore: $id")
+                null
+            }
+        } catch (e: Exception) {
+            Log.e("FirestoreManager", "Failed to get household from Firestore: ${e.message}")
+            null
+        }
+
     // Synchronize invitation with Firebase Firestore
     suspend fun syncInvitation(invitation: HouseholdInvitation) {
         val invitationData =
             hashMapOf(
                 "invitationCode" to invitation.invitationCode,
-                "householdId" to invitation.householdId,
+                "firestoreId" to invitation.firestoreId,
                 "createdByUserId" to invitation.createdByUserId,
                 "createdAt" to invitation.createdAt.toString(),
                 "isActive" to true,
@@ -64,6 +85,7 @@ class FirestoreManager {
             val document = invitationCollection.document(code).get().await()
             if (document.exists()) {
                 Log.d("FirestoreManager", "Invitation found in Firestore: $code")
+                Log.d("FirestoreManager", "Invitation data: ${document.data}")
                 document.data
             } else {
                 Log.d("FirestoreManager", "Invitation not found in Firestore: $code")
@@ -89,7 +111,7 @@ class FirestoreManager {
 
     // Synchronize member addition with Firestore
     suspend fun syncNewMember(
-        householdId: Int,
+        firestoreId: String,
         userId: String,
         role: String,
     ) {
@@ -102,7 +124,7 @@ class FirestoreManager {
 
         try {
             householdCollection
-                .document(householdId.toString())
+                .document(firestoreId)
                 .collection("members")
                 .document(userId)
                 .set(memberData)

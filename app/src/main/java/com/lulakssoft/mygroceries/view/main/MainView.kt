@@ -39,7 +39,7 @@ fun MainView(
             navController.navigate("householdSelection") {
                 popUpTo(navController.graph.startDestinationId) { inclusive = true }
             }
-        } else if (selectedHousehold.value == null && hasHouseholds) {
+        } else if (selectedHousehold.value == null) {
             selectedHousehold.value = households.first()
             viewModel.selectedHousehold = households.first()
         }

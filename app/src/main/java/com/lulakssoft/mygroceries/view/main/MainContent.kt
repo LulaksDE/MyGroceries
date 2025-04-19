@@ -125,7 +125,7 @@ fun MainContent(
             composable(route = "householdView") {
                 HouseholdView(
                     householdViewModel.apply {
-                        updateSelectedHousehold(viewModel.selectedHousehold.id)
+                        updateSelectedHousehold(viewModel.selectedHousehold.firestoreId.toString())
                     },
                     navigateToManagement = {
                         navController.navigate("householdManagement")
@@ -143,6 +143,7 @@ fun MainContent(
                     viewModel {
                         HouseholdManagementViewModel(householdRepository).apply {
                             selectedHouseholdId = viewModel.selectedHousehold.id
+                            selectedHouseholdFirestoreId = viewModel.selectedHousehold.firestoreId.toString()
                         }
                     }
                 HouseholdManagementView(managementViewModel)

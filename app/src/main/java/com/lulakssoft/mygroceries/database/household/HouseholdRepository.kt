@@ -1,5 +1,6 @@
 package com.lulakssoft.mygroceries.database.household
 
+import android.util.Log
 import com.google.firebase.auth.FirebaseAuth
 import com.lulakssoft.mygroceries.dataservice.FirestoreManager
 import kotlinx.coroutines.flow.Flow
@@ -17,7 +18,7 @@ class HouseholdRepository(
 
     suspend fun insertHouseholdAndGetId(household: Household): Long = householdDao.insertHouseholdAndGetId(household)
 
-    fun getHouseholdsByUserId(userId: String): Flow<List<Household>> = householdDao.getHouseholdsByUserId(userId)
+    fun getHouseholdsByUserId(Id: String): Flow<List<Household>> = householdDao.getHouseholdsByUserId(Id)
 
     suspend fun deleteHousehold(household: Household) {
         householdDao.delete(household)
@@ -27,6 +28,7 @@ class HouseholdRepository(
     suspend fun createHousehold(name: String): Int {
         val userId = currentUser?.uid ?: return -1
         val userName = currentUser.displayName ?: "User"
+        val firestoreId = UUID.randomUUID().toString()
 
         // Neuen Haushalt erstellen
         val household =
@@ -35,6 +37,7 @@ class HouseholdRepository(
                 createdByUserId = userId,
                 createdAt = LocalDateTime.now(),
                 isPrivate = false,
+                firestoreId = firestoreId,
             )
 
         // Haushalt in Datenbank speichern und ID zurückbekommen
@@ -44,19 +47,23 @@ class HouseholdRepository(
         val member =
             HouseholdMember(
                 householdId = householdId,
+                firestoreId = firestoreId,
                 userId = userId,
                 userName = userName,
                 role = MemberRole.OWNER,
             )
         memberDao.insertMember(member)
 
-        // Mit Firestore synchronisieren
-        firestoreManager.syncHousehold(household.copy(id = householdId))
-
+        // Mit Firestore synchronisieren wenn Firestore ID nicht null ist
+        if (household.firestoreId != null) {
+            firestoreManager.syncHousehold(household)
+        } else {
+            Log.e("HouseholdRepository", "Firestore ID is null")
+        }
         return householdId
     }
 
-    suspend fun generateInvitationCode(householdId: Int): String {
+    suspend fun generateInvitationCode(firestoreId: String): String {
         val userId = currentUser?.uid ?: return ""
 
         // Eindeutigen Code generieren
@@ -66,7 +73,7 @@ class HouseholdRepository(
         val invitation =
             HouseholdInvitation(
                 invitationCode = invitationCode,
-                householdId = householdId,
+                firestoreId = firestoreId,
                 createdByUserId = userId,
             )
         invitationDao.createInvitation(invitation)
@@ -78,55 +85,72 @@ class HouseholdRepository(
     }
 
     suspend fun joinHouseholdByCode(invitationCode: String): Boolean {
-        // Zuerst in lokaler Datenbank prüfen
-        val invitation = invitationDao.getInvitationByCode(invitationCode)
+        try {
+            val firestoreInvitation = firestoreManager.getInvitationByCode(invitationCode) ?: return false
 
-        // Falls nicht in lokaler DB, in Firestore nachsehen
-        val firestoreInvitation =
-            if (invitation == null) {
-                firestoreManager.getInvitationByCode(invitationCode)
+            // Prüfen ob isActive true ist
+            if (firestoreInvitation["isActive"] != true) {
+                Log.d("HouseholdRepository", "Invitation is not active")
+                return false
             } else {
-                null
+                val firestoreId = firestoreInvitation["firestoreId"] as? String ?: return false
+                Log.d("HouseholdRepository", "Firestore ID that will be joined: $firestoreId")
+                val userId = currentUser?.uid ?: return false
+                Log.d("HouseholdRepository", "User ID that will join: $userId")
+
+                // Prüfen, ob der Benutzer bereits Mitglied ist
+                val userHouseholds = memberDao.getHouseholdsForUser(userId).first()
+                Log.d("HouseholdRepository", "User households: $userHouseholds")
+                val isAlreadyMember = userHouseholds.any { it.firestoreId == firestoreId }
+                Log.d("HouseholdRepository", "Is already member: $isAlreadyMember")
+
+                if (isAlreadyMember) {
+                    Log.d("HouseholdRepository", "User is already a member of the household")
+                    return true
+                }
+                // Haushalt beitreten
+                firestoreManager.syncNewMember(firestoreId, userId, "MEMBER")
+                val joinedHousehold = firestoreManager.getHouseholdById(firestoreId)
+
+                val household =
+                    Household(
+                        householdName = joinedHousehold?.get("householdName") as? String ?: "",
+                        createdByUserId = joinedHousehold?.get("createdByUserId") as? String ?: "",
+                        createdAt = LocalDateTime.parse(joinedHousehold?.get("createdAt") as? String),
+                        isPrivate = joinedHousehold?.get("isPrivate") as? Boolean ?: false,
+                        firestoreId = firestoreId,
+                    )
+                val householdId = householdDao.insertHouseholdAndGetId(household).toInt()
+                Log.d("HouseholdRepository", "Created household: $household")
+
+                // Mitglied hinzufügen
+                val userName = currentUser.displayName ?: "User"
+                val member =
+                    HouseholdMember(
+                        householdId = householdId,
+                        firestoreId = firestoreId,
+                        userId = userId,
+                        userName = userName,
+                        role = MemberRole.MEMBER,
+                    )
+                memberDao.insertMember(member)
+                Log.d("HouseholdRepository", "Member added to household: $member")
+
+                // Einladung als verwendet markieren (optional)
+                firestoreManager.deactivateInvitation(invitationCode)
+
+                return true
             }
-
-        // Wenn keine Einladung gefunden wurde, fehlschlagen
-        if (invitation == null && firestoreInvitation == null) return false
-
-        val householdId = invitation?.householdId ?: firestoreInvitation?.get("householdId") as? Int ?: return false
-        val userId = currentUser?.uid ?: return false
-
-        // Prüfen, ob der Benutzer bereits Mitglied ist
-        val userHouseholds = memberDao.getHouseholdsForUser(userId).first()
-        val isAlreadyMember = userHouseholds.any { it.householdId == householdId }
-
-        if (isAlreadyMember) {
-            // Benutzer ist bereits Mitglied
-            return true
+        } catch (e: Exception) {
+            Log.e("HouseholdRepository", "Error joining household: ${e.message}")
+            return false
         }
-
-        // Benutzer als neues Mitglied hinzufügen
-        val newMember =
-            HouseholdMember(
-                householdId = householdId,
-                userId = userId,
-                userName = currentUser.displayName ?: "Gast",
-                role = MemberRole.MEMBER,
-            )
-        memberDao.insertMember(newMember)
-
-        // Mit Firestore synchronisieren
-        firestoreManager.syncNewMember(householdId, userId, "MEMBER")
-
-        // Einladung als verwendet markieren (optional)
-        firestoreManager.deactivateInvitation(invitationCode)
-
-        return true
     }
 
     suspend fun getUserMembershipInHousehold(
-        householdId: Int,
+        firestoreId: String,
         userId: String,
-    ): HouseholdMember? = memberDao.getMemberInHousehold(householdId, userId)
+    ): HouseholdMember? = memberDao.getMemberInHousehold(firestoreId, userId)
 
     // Haushalte für den aktuellen Benutzer abrufen
     fun getUserHouseholds() =
@@ -134,7 +158,7 @@ class HouseholdRepository(
             memberDao.getHouseholdsForUser(it)
         }
 
-    fun getHouseholdMembers(householdId: Int) = memberDao.getMembersForHousehold(householdId)
+    fun getHouseholdMembers(firestoreId: String) = memberDao.getMembersForHousehold(firestoreId)
 
     suspend fun removeMemberFromHousehold(member: HouseholdMember) = memberDao.removeMember(member)
 

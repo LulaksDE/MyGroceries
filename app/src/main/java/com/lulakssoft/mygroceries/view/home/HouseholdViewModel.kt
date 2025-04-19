@@ -47,18 +47,22 @@ class HouseholdViewModel(
         onSignOutCallback = callback
     }
 
-    fun updateSelectedHousehold(householdId: Int) {
-        loadUserRoleInHousehold(householdId)
+    fun updateSelectedHousehold(firestoreId: String) {
+        if (firestoreId.isNotEmpty()) {
+            loadUserRoleInHousehold(firestoreId)
+        } else {
+            Log.d("HouseholdViewModel", "FirestoreId is empty, cannot load user role")
+        }
     }
 
     private val _currentMemberRole = MutableStateFlow<HouseholdMember?>(null)
     val currentMemberRole = _currentMemberRole.asStateFlow()
 
     // Methode zur Prüfung der Mitgliedsrolle im aktuellen Haushalt
-    fun loadUserRoleInHousehold(householdId: Int) {
+    fun loadUserRoleInHousehold(firestoreId: String) {
         viewModelScope.launch {
             authClient.getSignedInUser()?.let { user ->
-                householdRepository.getUserMembershipInHousehold(householdId, user.uid)?.let { member ->
+                householdRepository.getUserMembershipInHousehold(firestoreId, user.uid)?.let { member ->
                     _currentMemberRole.value = member
                 }
             }

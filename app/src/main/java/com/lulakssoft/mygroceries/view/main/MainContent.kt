@@ -123,10 +123,10 @@ fun MainContent(
             modifier = Modifier.padding(innerPadding),
         ) {
             composable(route = "householdView") {
+                householdViewModel.updateSelectedHousehold(viewModel.selectedHousehold.firestoreId.toString())
+                householdViewModel.updateMemberCount(viewModel.selectedHousehold.firestoreId.toString())
                 HouseholdView(
-                    householdViewModel.apply {
-                        updateSelectedHousehold(viewModel.selectedHousehold.firestoreId.toString())
-                    },
+                    householdViewModel,
                     navigateToManagement = {
                         navController.navigate("householdManagement")
                     },

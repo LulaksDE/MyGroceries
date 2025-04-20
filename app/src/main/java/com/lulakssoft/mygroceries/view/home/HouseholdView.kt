@@ -23,7 +23,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -38,16 +37,12 @@ fun HouseholdView(
     viewModel: HouseholdViewModel,
     navigateToManagement: () -> Unit,
 ) {
-    val userData by viewModel.userData.collectAsState()
-    val currentMember by viewModel.currentMemberRole.collectAsState()
-
-    val canManageHousehold =
-        currentMember?.role == MemberRole.OWNER ||
-            currentMember?.role == MemberRole.ADMIN
+    val userData = viewModel.userData
+    val currentMember = viewModel.currentMemberRole
 
     Scaffold(
         floatingActionButton = {
-            if (canManageHousehold) {
+            if (currentMember?.role == MemberRole.OWNER || currentMember?.role == MemberRole.ADMIN) {
                 FloatingActionButton(onClick = navigateToManagement) {
                     Icon(
                         imageVector = Icons.Default.Settings,

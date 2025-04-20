@@ -43,7 +43,7 @@ interface HouseholdMemberDao {
     fun getHouseholdsForUser(userId: String): Flow<List<HouseholdMember>>
 
     @Query("SELECT COUNT(*) FROM household_member_table WHERE firestoreId = :firestoreId")
-    fun getMemberCountForHousehold(firestoreId: String): Int
+    suspend fun getMemberCountForHousehold(firestoreId: String): Int
 
     @Insert
     suspend fun insertMember(member: HouseholdMember)

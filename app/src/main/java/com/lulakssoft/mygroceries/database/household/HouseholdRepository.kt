@@ -20,7 +20,7 @@ class HouseholdRepository(
 
     fun getHouseholdsByUserId(Id: String): Flow<List<Household>> = householdDao.getHouseholdsByUserId(Id)
 
-    fun getMemberCountForHousehold(firestoreId: String): Int = memberDao.getMemberCountForHousehold(firestoreId)
+    suspend fun getMemberCountForHousehold(firestoreId: String): Int = memberDao.getMemberCountForHousehold(firestoreId)
 
     suspend fun deleteHousehold(household: Household) {
         householdDao.delete(household)

@@ -9,6 +9,7 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.lulakssoft.mygroceries.database.household.Household
 import com.lulakssoft.mygroceries.database.product.Product
 import com.lulakssoft.mygroceries.database.product.ProductRepository
 import com.lulakssoft.mygroceries.dataservice.DataService
@@ -35,10 +36,10 @@ class ScannerViewModel(
     var productEntryDate by mutableStateOf(LocalDateTime.now())
     var productQuantity by mutableStateOf(1)
 
-    private var currentHouseholdId: Int = 0
+    private lateinit var currentHousehold: Household
 
-    fun setCurrentHousehold(householdId: Int) {
-        currentHouseholdId = householdId
+    fun setCurrentHousehold(household: Household) {
+        currentHousehold = household
     }
 
     fun getProduct(barcode: String) {
@@ -78,7 +79,8 @@ class ScannerViewModel(
             repository.insertProduct(
                 Product(
                     0,
-                    currentHouseholdId, // Dynamische Haushalt-ID verwenden
+                    currentHousehold.id, // Dynamische Haushalt-ID verwenden
+                    currentHousehold.firestoreId.toString(),
                     product.product.name,
                     product.product.brand,
                     scannedCode,

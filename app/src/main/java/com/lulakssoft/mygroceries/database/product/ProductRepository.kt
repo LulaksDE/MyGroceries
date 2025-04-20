@@ -9,6 +9,10 @@ class ProductRepository(
         productDao.insertProduct(product)
     }
 
+    suspend fun getProductsByHouseholdId(householdId: Int) = productDao.selectProductsByHouseholdId(householdId)
+
+    suspend fun getProductsByFirestoreId(firestoreId: String) = productDao.selectProductsByFirestoreId(firestoreId)
+
     suspend fun deleteProduct(product: Product) {
         productDao.delete(product)
     }

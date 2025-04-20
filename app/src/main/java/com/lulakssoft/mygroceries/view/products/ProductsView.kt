@@ -12,7 +12,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
@@ -21,8 +20,6 @@ import com.lulakssoft.mygroceries.R
 
 @Composable
 fun ProductsView(viewModel: ProductsViewModel) {
-    val products by viewModel.products.collectAsState(initial = emptyList())
-
     Scaffold(
         floatingActionButton = {
             IconButton(onClick = { /*TODO*/ }) {
@@ -34,10 +31,10 @@ fun ProductsView(viewModel: ProductsViewModel) {
         },
     ) { innerPadding ->
         Column(
-            modifier = Modifier.padding(innerPadding)
+            modifier = Modifier.padding(innerPadding),
         ) { Text("You're on the products tab!") }
-        LazyColumn{
-            items(products) { product ->
+        LazyColumn {
+            items(viewModel.productList) { product ->
                 Card(modifier = Modifier.padding(8.dp).fillMaxWidth()) {
                     Text(product.productName)
                     Image(bitmap = product.productImage, "productImage")

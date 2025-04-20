@@ -25,6 +25,7 @@ data class Product(
     @PrimaryKey(autoGenerate = true)
     val id: Int,
     val householdId: Int,
+    val firestoreId: String,
     val productName: String,
     val productBrand: String,
     val productBarcode: String,

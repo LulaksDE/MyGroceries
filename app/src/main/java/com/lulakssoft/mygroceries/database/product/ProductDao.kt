@@ -12,7 +12,10 @@ interface ProductDao {
     fun selectAllProductsSortedByName(): Flow<List<Product>>
 
     @Query("SELECT * FROM product_table WHERE householdId = :householdId ORDER BY productName ASC")
-    fun selectProductsByHouseholdId(householdId: Int): Flow<List<Product>>
+    suspend fun selectProductsByHouseholdId(householdId: Int): List<Product>
+
+    @Query("SELECT * FROM product_table WHERE firestoreId = :firestoreId ORDER BY productName ASC")
+    suspend fun selectProductsByFirestoreId(firestoreId: String): List<Product>
 
     @Insert
     suspend fun insertProduct(product: Product)

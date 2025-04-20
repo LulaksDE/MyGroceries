@@ -55,7 +55,7 @@ fun MainContent(
     val scannerViewModel =
         remember {
             ScannerViewModel(viewModel.productRepository).apply {
-                setCurrentHousehold(viewModel.selectedHousehold.id)
+                setCurrentHousehold(viewModel.selectedHousehold)
             }
         }
 
@@ -133,6 +133,7 @@ fun MainContent(
                 )
             }
             composable(route = "productsView") {
+                productsViewModel.updateSelectedHousehold(viewModel.selectedHousehold)
                 ProductsView(productsViewModel)
             }
             composable(route = "scannerView") {

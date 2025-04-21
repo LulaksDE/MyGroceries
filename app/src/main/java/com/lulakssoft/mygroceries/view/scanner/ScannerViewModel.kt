@@ -42,6 +42,12 @@ class ScannerViewModel(
         currentHousehold = household
     }
 
+    private lateinit var userId: String
+
+    fun setUserId(id: String) {
+        userId = id
+    }
+
     fun getProduct(barcode: String) {
         viewModelScope.launch {
             errorMessage = ""
@@ -81,6 +87,7 @@ class ScannerViewModel(
                     0,
                     currentHousehold.id, // Dynamische Haushalt-ID verwenden
                     currentHousehold.firestoreId.toString(),
+                    userId,
                     product.product.name,
                     product.product.brand,
                     scannedCode,
@@ -88,6 +95,7 @@ class ScannerViewModel(
                     productBestBefore,
                     productEntryDate,
                     productImage,
+                    product.product.imageUrl,
                 ),
             )
         }

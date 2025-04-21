@@ -56,6 +56,7 @@ fun MainContent(
         remember {
             ScannerViewModel(viewModel.productRepository).apply {
                 setCurrentHousehold(viewModel.selectedHousehold)
+                setUserId(viewModel.currentUser?.userId.toString())
             }
         }
 

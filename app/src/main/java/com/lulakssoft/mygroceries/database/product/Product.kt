@@ -26,6 +26,7 @@ data class Product(
     val id: Int,
     val householdId: Int,
     val firestoreId: String,
+    val creatorId: String,
     val productName: String,
     val productBrand: String,
     val productBarcode: String,
@@ -33,4 +34,5 @@ data class Product(
     val productBestBeforeDate: LocalDate,
     val productEntryDate: LocalDateTime,
     val productImage: ImageBitmap,
+    val productImageUrl: String? = null,
 )

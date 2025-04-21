@@ -1,16 +1,24 @@
 package com.lulakssoft.mygroceries.dataservice
 
+import android.content.ContentValues.TAG
 import android.util.Log
+import androidx.compose.ui.graphics.ImageBitmap
 import com.google.firebase.firestore.FirebaseFirestore
 import com.lulakssoft.mygroceries.database.household.Household
 import com.lulakssoft.mygroceries.database.household.HouseholdInvitation
+import com.lulakssoft.mygroceries.database.product.Product
 import kotlinx.coroutines.tasks.await
+import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 class FirestoreManager {
     private val firestore = FirebaseFirestore.getInstance()
     private val householdCollection = firestore.collection("households")
     private val invitationCollection = firestore.collection("invitations")
+
+    private val dateFormatter = DateTimeFormatter.ISO_LOCAL_DATE
+    private val dateTimeFormatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME
 
     // Synchronize household with Firebase Firestore
     suspend fun syncHousehold(household: Household) {
@@ -134,4 +142,66 @@ class FirestoreManager {
             Log.e("FirestoreManager", "Failed to sync new member: ${e.message}")
         }
     }
+
+    suspend fun addProductToHousehold(
+        householdId: String,
+        product: Product,
+    ): String {
+        try {
+            val productData =
+                hashMapOf(
+                    "productName" to product.productName,
+                    "productBrand" to product.productBrand,
+                    "productBarcode" to product.productBarcode,
+                    "productQuantity" to product.productQuantity,
+                    "productBestBeforeDate" to product.productBestBeforeDate.format(dateFormatter),
+                    "productEntryDate" to LocalDateTime.now().format(dateTimeFormatter),
+                    "createdByUserId" to product.creatorId,
+                    "imageUrl" to product.productImageUrl,
+                )
+
+            val productRef =
+                firestore
+                    .collection("households")
+                    .document(householdId)
+                    .collection("products")
+                    .add(productData)
+                    .await()
+
+            Log.d(TAG, "Product added successfully to firestore: ${productRef.id}")
+            return productRef.id
+        } catch (e: Exception) {
+            Log.e(TAG, "Error while adding product to firestore", e)
+            throw e
+        }
+    }
+
+    // Convert Firestore product data to local Product object
+    fun convertFirestoreProductToLocal(
+        productId: String,
+        householdId: Int,
+        productData: Map<String, Any>,
+    ): Product =
+        Product(
+            id = 0, // Auto-generated ID
+            householdId = householdId,
+            firestoreId = productId,
+            creatorId = productData["createdByUserId"] as String,
+            productName = productData["productName"] as String,
+            productBrand = productData["productBrand"] as String,
+            productBarcode = productData["productBarcode"] as String,
+            productQuantity = (productData["productQuantity"] as Long).toInt(),
+            productBestBeforeDate =
+                LocalDate.parse(
+                    productData["productBestBeforeDate"] as String,
+                    dateFormatter,
+                ),
+            productEntryDate =
+                LocalDateTime.parse(
+                    productData["productEntryDate"] as String,
+                    dateTimeFormatter,
+                ),
+            productImage = productData["imageBitmap"] as ImageBitmap,
+            productImageUrl = productData["imageUrl"] as String?,
+        )
 }

@@ -27,7 +27,7 @@ class MainViewModel : ViewModel() {
     var householdText by mutableStateOf("")
     var selectedHousehold by mutableStateOf(Household(0, "", ""))
 
-    private var currentUser: UserData? = null
+    internal var currentUser: UserData? = null
 
     // Flow für die Haushalte des aktuellen Benutzers
     private var _households = mutableStateOf<Flow<List<Household>>>(emptyFlow())

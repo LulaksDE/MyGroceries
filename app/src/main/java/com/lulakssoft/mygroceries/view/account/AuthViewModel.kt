@@ -1,11 +1,13 @@
 package com.lulakssoft.mygroceries.view.account
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
+import com.lulakssoft.mygroceries.database.household.HouseholdRepository
+import com.lulakssoft.mygroceries.database.product.DatabaseApp
+import com.lulakssoft.mygroceries.dataservice.FirestoreHouseholdRepository
+import com.lulakssoft.mygroceries.sync.HouseholdSyncService
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -58,7 +60,26 @@ class AuthViewModel(
                 } else {
                     AuthState.Error(signInResult.errorMessage ?: "Unknown error")
                 }
+            if (_authState.value is AuthState.Authenticated) {
+                val userData = (_authState.value as AuthState.Authenticated).userData
+                syncAfterLogin(userData)
+            }
         }
+
+    private fun syncAfterLogin(userData: UserData) {
+        viewModelScope.launch {
+            val firestoreRepo = FirestoreHouseholdRepository()
+            val localRepo =
+                HouseholdRepository(
+                    DatabaseApp.getInstance(googleAuthUiClient.getContext()).householdDao,
+                    DatabaseApp.getInstance(googleAuthUiClient.getContext()).householdMemberDao,
+                    DatabaseApp.getInstance(googleAuthUiClient.getContext()).householdInvitationDao,
+                )
+
+            val syncService = HouseholdSyncService(localRepo, firestoreRepo)
+            syncService.syncUserHouseholds(userData.userId)
+        }
+    }
 
     init {
         // Check if already signed in

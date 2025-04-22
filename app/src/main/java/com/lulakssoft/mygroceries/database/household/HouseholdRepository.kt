@@ -58,7 +58,7 @@ class HouseholdRepository(
 
         // Mit Firestore synchronisieren wenn Firestore ID nicht null ist
         if (household.firestoreId != null) {
-            firestoreManager.syncHousehold(household)
+            firestoreManager.syncNewHousehold(household, member.userName)
         } else {
             Log.e("HouseholdRepository", "Firestore ID is null")
         }
@@ -86,6 +86,45 @@ class HouseholdRepository(
         return invitationCode
     }
 
+    suspend fun insertOrUpdateHousehold(household: Household): Long {
+        val existingHousehold =
+            household.firestoreId?.let { firestoreId ->
+                // Suche nach Haushalt mit dieser firestoreId
+                householdDao.getHouseholdByFirestoreId(firestoreId)
+            }
+
+        return if (existingHousehold == null) {
+            // Einfügen als neuen Haushalt
+            householdDao.insertHouseholdAndGetId(household)
+        } else {
+            // Aktualisieren des bestehenden Haushalts
+            householdDao.updateHousehold(
+                existingHousehold.id,
+                household.householdName,
+                household.isPrivate,
+            )
+            existingHousehold.id.toLong()
+        }
+    }
+
+    suspend fun insertOrUpdateMember(member: HouseholdMember) {
+        val existingMember =
+            memberDao.getMemberInHousehold(
+                member.firestoreId,
+                member.userId,
+            )
+
+        if (existingMember == null) {
+            memberDao.insertMember(member)
+        } else {
+            memberDao.updateMember(
+                existingMember.id,
+                member.role,
+                member.userName,
+            )
+        }
+    }
+
     suspend fun joinHouseholdByCode(invitationCode: String): Boolean {
         try {
             val firestoreInvitation = firestoreManager.getInvitationByCode(invitationCode) ?: return false
@@ -98,6 +137,7 @@ class HouseholdRepository(
                 val firestoreId = firestoreInvitation["firestoreId"] as? String ?: return false
                 Log.d("HouseholdRepository", "Firestore ID that will be joined: $firestoreId")
                 val userId = currentUser?.uid ?: return false
+                val userName = currentUser.displayName ?: "User"
                 Log.d("HouseholdRepository", "User ID that will join: $userId")
 
                 // Prüfen, ob der Benutzer bereits Mitglied ist
@@ -111,7 +151,7 @@ class HouseholdRepository(
                     return true
                 }
                 // Haushalt beitreten
-                firestoreManager.syncNewMember(firestoreId, userId, "MEMBER")
+                firestoreManager.syncNewMember(firestoreId, userId, userName, "MEMBER")
                 val joinedHousehold = firestoreManager.getHouseholdById(firestoreId)
 
                 val household =
@@ -126,7 +166,6 @@ class HouseholdRepository(
                 Log.d("HouseholdRepository", "Created household: $household")
 
                 // Mitglied hinzufügen
-                val userName = currentUser.displayName ?: "User"
                 val member =
                     HouseholdMember(
                         householdId = householdId,

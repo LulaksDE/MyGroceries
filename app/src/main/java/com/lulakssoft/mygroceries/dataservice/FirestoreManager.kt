@@ -3,6 +3,7 @@ package com.lulakssoft.mygroceries.dataservice
 import android.content.ContentValues.TAG
 import android.util.Log
 import androidx.compose.ui.graphics.ImageBitmap
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.lulakssoft.mygroceries.database.household.Household
 import com.lulakssoft.mygroceries.database.household.HouseholdInvitation
@@ -21,7 +22,10 @@ class FirestoreManager {
     private val dateTimeFormatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME
 
     // Synchronize household with Firebase Firestore
-    suspend fun syncHousehold(household: Household) {
+    suspend fun syncNewHousehold(
+        household: Household,
+        userName: String,
+    ) {
         if (household.firestoreId == null) {
             Log.e("FirestoreManager", "Firestore ID is null, cannot sync household")
             return
@@ -41,7 +45,7 @@ class FirestoreManager {
                 .set(householdData)
                 .await()
 
-            syncNewMember(household.firestoreId, household.createdByUserId, "OWNER")
+            syncNewMember(household.firestoreId, household.createdByUserId, userName, "OWNER")
             Log.d("FirestoreManager", "Household synchronized to Firestore")
         } catch (e: Exception) {
             Log.e("FirestoreManager", "Failed to sync household: ${e.message}")
@@ -121,11 +125,13 @@ class FirestoreManager {
     suspend fun syncNewMember(
         firestoreId: String,
         userId: String,
+        userName: String,
         role: String,
     ) {
         val memberData =
             hashMapOf(
                 "userId" to userId,
+                "userName" to userName,
                 "role" to role,
                 "joinedAt" to LocalDateTime.now(),
             )
@@ -137,6 +143,18 @@ class FirestoreManager {
                 .document(userId)
                 .set(memberData)
                 .await()
+
+            firestore
+                .collection("users")
+                .document(userId)
+                .collection("memberships")
+                .document(firestoreId)
+                .set(
+                    mapOf(
+                        "role" to role,
+                        "joinedAt" to FieldValue.serverTimestamp(),
+                    ),
+                )
             Log.d("FirestoreManager", "New member synchronized to Firestore")
         } catch (e: Exception) {
             Log.e("FirestoreManager", "Failed to sync new member: ${e.message}")

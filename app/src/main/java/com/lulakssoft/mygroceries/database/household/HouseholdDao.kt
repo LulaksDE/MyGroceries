@@ -32,6 +32,16 @@ interface HouseholdDao {
 
     @Insert
     suspend fun insertHouseholdAndGetId(household: Household): Long
+
+    @Query("SELECT * FROM household_table WHERE firestoreId = :firestoreId LIMIT 1")
+    suspend fun getHouseholdByFirestoreId(firestoreId: String): Household?
+
+    @Query("UPDATE household_table SET householdName = :name, isPrivate = :isPrivate WHERE id = :id")
+    suspend fun updateHousehold(
+        id: Int,
+        name: String,
+        isPrivate: Boolean,
+    )
 }
 
 @Dao
@@ -55,6 +65,13 @@ interface HouseholdMemberDao {
     suspend fun updateMemberRole(
         memberId: Int,
         newRole: MemberRole,
+    )
+
+    @Query("UPDATE household_member_table SET role = :role, userName = :userName WHERE id = :id")
+    suspend fun updateMember(
+        id: Int,
+        role: MemberRole,
+        userName: String,
     )
 
     @Query("SELECT * FROM household_member_table WHERE firestoreId = :firestoreId AND userId = :userId LIMIT 1")

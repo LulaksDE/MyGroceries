@@ -2,14 +2,12 @@ package com.lulakssoft.mygroceries.dataservice
 
 import android.content.ContentValues.TAG
 import android.util.Log
-import androidx.compose.ui.graphics.ImageBitmap
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.lulakssoft.mygroceries.database.household.Household
 import com.lulakssoft.mygroceries.database.household.HouseholdInvitation
 import com.lulakssoft.mygroceries.database.product.Product
 import kotlinx.coroutines.tasks.await
-import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
@@ -162,12 +160,13 @@ class FirestoreManager {
     }
 
     suspend fun addProductToHousehold(
-        householdId: String,
+        firestoreId: String,
         product: Product,
     ): String {
         try {
             val productData =
                 hashMapOf(
+                    "productId" to product.productUuid,
                     "productName" to product.productName,
                     "productBrand" to product.productBrand,
                     "productBarcode" to product.productBarcode,
@@ -181,7 +180,7 @@ class FirestoreManager {
             val productRef =
                 firestore
                     .collection("households")
-                    .document(householdId)
+                    .document(firestoreId)
                     .collection("products")
                     .add(productData)
                     .await()
@@ -193,33 +192,4 @@ class FirestoreManager {
             throw e
         }
     }
-
-    // Convert Firestore product data to local Product object
-    fun convertFirestoreProductToLocal(
-        productId: String,
-        householdId: Int,
-        productData: Map<String, Any>,
-    ): Product =
-        Product(
-            id = 0, // Auto-generated ID
-            householdId = householdId,
-            firestoreId = productId,
-            creatorId = productData["createdByUserId"] as String,
-            productName = productData["productName"] as String,
-            productBrand = productData["productBrand"] as String,
-            productBarcode = productData["productBarcode"] as String,
-            productQuantity = (productData["productQuantity"] as Long).toInt(),
-            productBestBeforeDate =
-                LocalDate.parse(
-                    productData["productBestBeforeDate"] as String,
-                    dateFormatter,
-                ),
-            productEntryDate =
-                LocalDateTime.parse(
-                    productData["productEntryDate"] as String,
-                    dateTimeFormatter,
-                ),
-            productImage = productData["imageBitmap"] as ImageBitmap,
-            productImageUrl = productData["imageUrl"] as String?,
-        )
 }

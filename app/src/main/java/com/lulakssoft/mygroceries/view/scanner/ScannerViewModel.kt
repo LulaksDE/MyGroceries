@@ -18,6 +18,7 @@ import com.lulakssoft.mygroceries.dto.ProductInfo
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.util.UUID
 
 class ScannerViewModel(
     private val repository: ProductRepository,
@@ -87,6 +88,7 @@ class ScannerViewModel(
                     0,
                     currentHousehold.id, // Dynamische Haushalt-ID verwenden
                     currentHousehold.firestoreId.toString(),
+                    UUID.randomUUID().toString(),
                     userId,
                     product.product.name,
                     product.product.brand,

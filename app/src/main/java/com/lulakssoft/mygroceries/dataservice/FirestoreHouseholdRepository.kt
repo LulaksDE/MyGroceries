@@ -10,7 +10,6 @@ class FirestoreHouseholdRepository {
     private val TAG = "FirestoreRepository"
 
     suspend fun getUserHouseholds(userId: String): List<FirestoreHousehold> {
-        val result = mutableListOf<FirestoreHousehold>()
         try {
             Log.d(TAG, "Fetching household memberships in firestore for user: $userId")
             val memberships =
@@ -100,6 +99,43 @@ class FirestoreHouseholdRepository {
         }
     }
 
+    suspend fun getHouseholdProducts(householdId: String): List<FirestoreProduct> {
+        try {
+            Log.d(TAG, "Fetching household products in firestore for household: $householdId")
+            val productsSnapshot =
+                firestore
+                    .collection("households")
+                    .document(householdId)
+                    .collection("products")
+                    .get()
+                    .await()
+
+            Log.d(TAG, "Fetched ${productsSnapshot.size()} products for household: $householdId")
+            val products = mutableListOf<FirestoreProduct>()
+            for (productSnapshot in productsSnapshot) {
+                val productData = productSnapshot.data
+                val product =
+                    FirestoreProduct(
+                        productUuid = productSnapshot.id,
+                        createdByUserId = productData["createdByUserId"] as String,
+                        imageUrl = productData["imageUrl"] as String,
+                        productBarcode = productData["productBarcode"] as String,
+                        productBestBeforeDate = productData["productBestBeforeDate"] as String,
+                        productBrand = productData["productBrand"] as String,
+                        productEntryDate = productData["productEntryDate"] as String,
+                        productName = productData["productName"] as String,
+                        productQuantity = (productData["productQuantity"] as Long).toInt(),
+                    )
+                products.add(product)
+                Log.d(TAG, "Fetched household product: $product")
+            }
+            return products
+        } catch (e: Exception) {
+            Log.e(TAG, "Error fetching household products", e)
+            return emptyList()
+        }
+    }
+
     private fun parseLocalDateTimeFromMap(dateMap: Map<String, Any>): LocalDateTime =
         try {
             val year = (dateMap["year"] as Long).toInt()
@@ -132,4 +168,16 @@ data class FirestoreHouseholdMember(
     val role: String = "MEMBER",
     val joinedAt: LocalDateTime,
     val id: String = "",
+)
+
+data class FirestoreProduct(
+    val productUuid: String = "",
+    val createdByUserId: String = "",
+    val imageUrl: String = "",
+    val productBarcode: String = "",
+    val productBestBeforeDate: String = "",
+    val productBrand: String = "",
+    val productEntryDate: String = "",
+    val productName: String = "",
+    val productQuantity: Int = 0,
 )

@@ -1,5 +1,6 @@
 package com.lulakssoft.mygroceries.view.main
 
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -10,6 +11,8 @@ import com.lulakssoft.mygroceries.database.household.HouseholdMember
 import com.lulakssoft.mygroceries.database.household.HouseholdRepository
 import com.lulakssoft.mygroceries.database.product.DatabaseApp
 import com.lulakssoft.mygroceries.database.product.ProductRepository
+import com.lulakssoft.mygroceries.dataservice.FirestoreHouseholdRepository
+import com.lulakssoft.mygroceries.sync.HouseholdSyncService
 import com.lulakssoft.mygroceries.view.account.UserData
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
@@ -26,6 +29,8 @@ class MainViewModel : ViewModel() {
 
     var householdText by mutableStateOf("")
     var selectedHousehold by mutableStateOf(Household(0, "", ""))
+
+    val TAG = "MainViewModel"
 
     internal var currentUser: UserData? = null
 
@@ -54,6 +59,32 @@ class MainViewModel : ViewModel() {
         currentUser?.let { user ->
             viewModelScope.launch {
                 _households.value = householdRepository.getHouseholdsByUserId(user.userId)
+            }
+        }
+    }
+
+    var isSyncing by mutableStateOf(false)
+        private set
+
+    fun syncHouseholds() {
+        viewModelScope.launch {
+            if (isSyncing) return@launch
+
+            isSyncing = true
+            try {
+                currentUser?.let { user ->
+                    val syncService =
+                        HouseholdSyncService(
+                            householdRepository,
+                            productRepository,
+                            FirestoreHouseholdRepository(),
+                        )
+                    syncService.syncUserHouseholds(user.userId)
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error during household sync", e)
+            } finally {
+                isSyncing = false
             }
         }
     }

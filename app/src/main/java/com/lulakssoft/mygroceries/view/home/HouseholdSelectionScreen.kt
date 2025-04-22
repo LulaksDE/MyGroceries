@@ -30,6 +30,9 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.pulltorefresh.PullToRefreshState
+import androidx.compose.material3.pulltorefresh.pullToRefresh
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -69,6 +72,8 @@ fun HouseholdSelectionScreen(
 
     val householdManagementViewModel = viewModel { HouseholdManagementViewModel(householdRepository) }
     val households by viewModel.households.collectAsState(initial = emptyList())
+    val refreshing = viewModel.isSyncing
+    val pullRefreshState = rememberPullToRefreshState()
 
     var showCreateHouseholdDialog by remember { mutableStateOf(false) }
     var showJoinHouseholdDialog by remember { mutableStateOf(false) }
@@ -102,9 +107,12 @@ fun HouseholdSelectionScreen(
             )
 
             if (households.isEmpty()) {
-                EmptyHouseholdsList()
+                EmptyHouseholdsList(refreshing, onRefresh = { viewModel.syncHouseholds() }, pullRefreshState)
             } else {
                 HouseholdsList(
+                    refreshing,
+                    onRefresh = { viewModel.syncHouseholds() },
+                    pullRefreshState,
                     households = households,
                     onHouseholdSelected = onHouseholdSelected,
                 )
@@ -211,13 +219,18 @@ fun HouseholdSelectionScreen(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun EmptyHouseholdsList() {
+private fun EmptyHouseholdsList(
+    refreshing: Boolean,
+    onRefresh: () -> Unit,
+    pullRefreshState: PullToRefreshState,
+) {
     Box(
         modifier =
             Modifier
                 .fillMaxWidth()
-                .height(200.dp),
+                .pullToRefresh(isRefreshing = refreshing, onRefresh = onRefresh, state = pullRefreshState),
         contentAlignment = Alignment.Center,
     ) {
         Column(
@@ -245,12 +258,22 @@ private fun EmptyHouseholdsList() {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun HouseholdsList(
+    refreshing: Boolean,
+    onRefresh: () -> Unit,
+    pullRefreshState: PullToRefreshState,
     households: List<Household>,
     onHouseholdSelected: (Household) -> Unit,
 ) {
-    LazyColumn {
+    LazyColumn(
+        modifier =
+            Modifier
+                .pullToRefresh(isRefreshing = refreshing, onRefresh = onRefresh, state = pullRefreshState),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
         items(households) { household ->
             HouseholdItem(
                 household = household,

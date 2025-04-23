@@ -2,8 +2,8 @@ package com.lulakssoft.mygroceries.view.home
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -30,8 +30,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.pulltorefresh.PullToRefreshState
-import androidx.compose.material3.pulltorefresh.pullToRefresh
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -42,7 +41,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.lulakssoft.mygroceries.R
@@ -70,10 +68,12 @@ fun HouseholdSelectionScreen(
             )
         }
 
-    val householdManagementViewModel = viewModel { HouseholdManagementViewModel(householdRepository) }
+    val householdManagementViewModel =
+        viewModel { HouseholdManagementViewModel(householdRepository) }
     val households by viewModel.households.collectAsState(initial = emptyList())
     val refreshing = viewModel.isSyncing
     val pullRefreshState = rememberPullToRefreshState()
+    val onRefresh = { viewModel.syncHouseholds() }
 
     var showCreateHouseholdDialog by remember { mutableStateOf(false) }
     var showJoinHouseholdDialog by remember { mutableStateOf(false) }
@@ -92,36 +92,34 @@ fun HouseholdSelectionScreen(
             )
         },
     ) { padding ->
-        Column(
+        PullToRefreshBox(
             modifier =
                 Modifier
                     .padding(padding)
                     .fillMaxSize()
-                    .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+                    .padding(top = 0.dp, bottom = 0.dp, start = 4.dp, end = 4.dp),
+            onRefresh = onRefresh,
+            state = pullRefreshState,
+            isRefreshing = refreshing,
         ) {
-            Text(
-                "Your Households",
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold,
-            )
-
             if (households.isEmpty()) {
-                EmptyHouseholdsList(refreshing, onRefresh = { viewModel.syncHouseholds() }, pullRefreshState)
+                EmptyHouseholdsList()
             } else {
-                HouseholdsList(
-                    refreshing,
-                    onRefresh = { viewModel.syncHouseholds() },
-                    pullRefreshState,
-                    households = households,
-                    onHouseholdSelected = onHouseholdSelected,
-                )
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                    contentPadding = PaddingValues(bottom = 80.dp),
+                ) {
+                    items(households) { household ->
+                        HouseholdItem(
+                            household = household,
+                            onClick = onHouseholdSelected,
+                        )
+                    }
+                }
             }
-
-            Spacer(modifier = Modifier.weight(1f))
-
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().align(Alignment.BottomCenter).padding(16.dp),
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
             ) {
                 Button(
@@ -151,108 +149,68 @@ fun HouseholdSelectionScreen(
                 }
             }
         }
-    }
-
-    // Create Household Dialog
-    if (showCreateHouseholdDialog) {
-        AlertDialog(
-            onDismissRequest = { showCreateHouseholdDialog = false },
-            title = { Text("Create New Household") },
-            text = {
-                TextField(
-                    value = newHouseholdName,
-                    onValueChange = { newHouseholdName = it },
-                    label = { Text("Household Name") },
-                    modifier = Modifier.fillMaxWidth(),
-                )
-            },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        viewModel.householdText = newHouseholdName
-                        viewModel.insert()
-                        showCreateHouseholdDialog = false
-                        newHouseholdName = ""
-                    },
-                ) {
-                    Text("Create")
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showCreateHouseholdDialog = false }) {
-                    Text("Cancel")
-                }
-            },
-        )
-    }
-
-    // Join Household Dialog and wait if join is successful
-    if (showJoinHouseholdDialog) {
-        AlertDialog(
-            onDismissRequest = { showJoinHouseholdDialog = false },
-            title = { Text("Join Household") },
-            text = {
-                TextField(
-                    value = invitationCode,
-                    onValueChange = { invitationCode = it },
-                    label = { Text("Invitation Code") },
-                    modifier = Modifier.fillMaxWidth(),
-                )
-            },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        householdManagementViewModel.joinHouseholdByCode(invitationCode)
-                        showJoinHouseholdDialog = false
-                        invitationCode = ""
-                    },
-                ) {
-                    Text("Join")
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showJoinHouseholdDialog = false }) {
-                    Text("Cancel")
-                }
-            },
-        )
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun EmptyHouseholdsList(
-    refreshing: Boolean,
-    onRefresh: () -> Unit,
-    pullRefreshState: PullToRefreshState,
-) {
-    Box(
-        modifier =
-            Modifier
-                .fillMaxWidth()
-                .pullToRefresh(isRefreshing = refreshing, onRefresh = onRefresh, state = pullRefreshState),
-        contentAlignment = Alignment.Center,
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
-        ) {
-            Icon(
-                imageVector = Icons.Default.Home,
-                contentDescription = null,
-                modifier = Modifier.size(64.dp),
-                tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
+        // Create Household Dialog
+        if (showCreateHouseholdDialog) {
+            AlertDialog(
+                onDismissRequest = { showCreateHouseholdDialog = false },
+                title = { Text("Create New Household") },
+                text = {
+                    TextField(
+                        value = newHouseholdName,
+                        onValueChange = { newHouseholdName = it },
+                        label = { Text("Household Name") },
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            viewModel.householdText = newHouseholdName
+                            viewModel.insert()
+                            showCreateHouseholdDialog = false
+                            newHouseholdName = ""
+                        },
+                    ) {
+                        Text("Create")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showCreateHouseholdDialog = false }) {
+                        Text("Cancel")
+                    }
+                },
             )
-            Spacer(modifier = Modifier.height(16.dp))
-            Text(
-                "No households yet",
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
-            )
-            Text(
-                "Create or join a household to get started",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+        }
+
+        // Join Household Dialog and wait if join is successful
+        if (showJoinHouseholdDialog) {
+            AlertDialog(
+                onDismissRequest = { showJoinHouseholdDialog = false },
+                title = { Text("Join Household") },
+                text = {
+                    TextField(
+                        value = invitationCode,
+                        onValueChange = { invitationCode = it },
+                        label = { Text("Invitation Code") },
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            householdManagementViewModel.joinHouseholdByCode(invitationCode)
+                            showJoinHouseholdDialog = false
+                            invitationCode = ""
+                        },
+                    ) {
+                        Text("Join")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showJoinHouseholdDialog = false }) {
+                        Text("Cancel")
+                    }
+                },
             )
         }
     }
@@ -260,24 +218,32 @@ private fun EmptyHouseholdsList(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun HouseholdsList(
-    refreshing: Boolean,
-    onRefresh: () -> Unit,
-    pullRefreshState: PullToRefreshState,
-    households: List<Household>,
-    onHouseholdSelected: (Household) -> Unit,
-) {
+private fun EmptyHouseholdsList() {
     LazyColumn(
         modifier =
             Modifier
-                .pullToRefresh(isRefreshing = refreshing, onRefresh = onRefresh, state = pullRefreshState),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
+                .fillMaxSize()
+                .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
     ) {
-        items(households) { household ->
-            HouseholdItem(
-                household = household,
-                onClick = { onHouseholdSelected(household) },
+        item {
+            Icon(
+                imageVector = Icons.Default.Home,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(64.dp),
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = "No Households Found",
+                style = MaterialTheme.typography.titleMedium,
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = "Create or join a household to get started.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
     }
@@ -286,14 +252,14 @@ private fun HouseholdsList(
 @Composable
 private fun HouseholdItem(
     household: Household,
-    onClick: () -> Unit,
+    onClick: (Household) -> Unit,
 ) {
     Card(
         modifier =
             Modifier
                 .fillMaxWidth()
                 .padding(vertical = 8.dp)
-                .clickable(onClick = onClick),
+                .clickable(enabled = true) { onClick(household) },
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
         shape = RoundedCornerShape(12.dp),
     ) {

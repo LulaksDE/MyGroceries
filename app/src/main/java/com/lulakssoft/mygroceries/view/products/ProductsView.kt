@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -25,7 +26,6 @@ import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.List
-import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.Card
@@ -47,10 +47,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.lulakssoft.mygroceries.R
 import com.lulakssoft.mygroceries.database.product.Product
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
@@ -101,32 +103,19 @@ fun ProductsView(viewModel: ProductsViewModel) {
                             checked = !isGridView,
                             onCheckedChange = { isGridView = !it },
                         ) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.List,
-                                contentDescription = "Listlayout",
-                                tint =
-                                    if (!isGridView) {
-                                        MaterialTheme.colorScheme.primary
-                                    } else {
-                                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                                    },
-                            )
-                        }
-
-                        IconToggleButton(
-                            checked = isGridView,
-                            onCheckedChange = { isGridView = it },
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Menu,
-                                contentDescription = "Gridlayout",
-                                tint =
-                                    if (isGridView) {
-                                        MaterialTheme.colorScheme.primary
-                                    } else {
-                                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                                    },
-                            )
+                            if (!isGridView) {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.List,
+                                    contentDescription = "Listlayout",
+                                    tint = MaterialTheme.colorScheme.primary,
+                                )
+                            } else {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.baseline_grid_view_24),
+                                    contentDescription = "Gridlayout",
+                                    tint = MaterialTheme.colorScheme.primary,
+                                )
+                            }
                         }
                     }
                 }
@@ -147,9 +136,9 @@ fun ProductsView(viewModel: ProductsViewModel) {
             if (isGridView) {
                 LazyVerticalGrid(
                     columns = GridCells.Fixed(2),
-                    contentPadding = PaddingValues(8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                    verticalArrangement = Arrangement.spacedBy(6.dp),
+                    contentPadding = PaddingValues(4.dp),
+                    horizontalArrangement = Arrangement.spacedBy(3.dp),
+                    verticalArrangement = Arrangement.spacedBy(3.dp),
                     modifier = Modifier.padding(padding),
                 ) {
                     items(count = filteredProducts.size) { size ->
@@ -178,44 +167,25 @@ fun ProductGridItem(product: Product) {
         modifier =
             Modifier
                 .fillMaxWidth()
-                .aspectRatio(0.85f),
+                .aspectRatio(0.9f)
+                .padding(4.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(8.dp),
     ) {
         Column {
             Box(
                 modifier =
                     Modifier
                         .fillMaxWidth()
-                        .height(120.dp)
+                        .height(100.dp)
                         .background(MaterialTheme.colorScheme.surfaceVariant),
             ) {
                 Image(
                     bitmap = product.productImage,
                     contentDescription = null,
-                    contentScale = ContentScale.Crop,
+                    contentScale = ContentScale.FillWidth,
                     modifier = Modifier.fillMaxSize(),
                 )
-            }
-            val daysUntilExpiration = product.calculateDaysUntilExpiration()
-            if (daysUntilExpiration < 7) {
-                Surface(
-                    color =
-                        if (daysUntilExpiration < 3) {
-                            MaterialTheme.colorScheme.error
-                        } else {
-                            MaterialTheme.colorScheme.tertiary
-                        },
-                    shape = RoundedCornerShape(bottomEnd = 8.dp),
-                    modifier = Modifier.align(Alignment.Start),
-                ) {
-                    Text(
-                        text = "MHD: $daysUntilExpiration days",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onError,
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                    )
-                }
             }
         }
 
@@ -223,7 +193,7 @@ fun ProductGridItem(product: Product) {
             modifier =
                 Modifier
                     .fillMaxWidth()
-                    .padding(12.dp),
+                    .padding(8.dp),
         ) {
             Text(
                 text = product.productName,
@@ -233,7 +203,7 @@ fun ProductGridItem(product: Product) {
                 overflow = TextOverflow.Ellipsis,
             )
 
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(2.dp))
 
             Text(
                 text = product.productBrand,
@@ -243,7 +213,7 @@ fun ProductGridItem(product: Product) {
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(4.dp))
 
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -259,6 +229,39 @@ fun ProductGridItem(product: Product) {
                     text = product.productBestBeforeDate.toString(),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
+        val daysUntilExpiration = product.calculateDaysUntilExpiration()
+        if (daysUntilExpiration < 7) {
+            Surface(
+                color =
+                    if (daysUntilExpiration < 3) {
+                        MaterialTheme.colorScheme.error
+                    } else {
+                        MaterialTheme.colorScheme.tertiary
+                    },
+                shape = RoundedCornerShape(bottomEnd = 8.dp),
+                modifier = Modifier.fillMaxHeight().align(Alignment.End),
+            ) {
+                Text(
+                    text = "MHD: $daysUntilExpiration days",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onError,
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                )
+            }
+        } else {
+            Surface(
+                color = MaterialTheme.colorScheme.surface,
+                shape = RoundedCornerShape(bottomEnd = 8.dp),
+                modifier = Modifier.fillMaxHeight().align(Alignment.End),
+            ) {
+                Text(
+                    text = "MHD: $daysUntilExpiration days",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                 )
             }
         }

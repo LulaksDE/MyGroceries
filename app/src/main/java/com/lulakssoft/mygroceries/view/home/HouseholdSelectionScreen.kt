@@ -258,7 +258,7 @@ private fun HouseholdItem(
         modifier =
             Modifier
                 .fillMaxWidth()
-                .padding(vertical = 8.dp)
+                .padding(vertical = 8.dp, horizontal = 8.dp)
                 .clickable(enabled = true) { onClick(household) },
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
         shape = RoundedCornerShape(12.dp),

@@ -6,7 +6,20 @@
         <group
         android:translateX="256"
         android:translateY="256">
-        <path
+            <path
+                android:pathData="M430 510 A260 30 0 0 1 10 510 A260 30 0 0 1 430 510 z">
+                <aapt:attr name="android:fillColor">
+                    <gradient
+                    android:type="radial"
+                    android:centerX="220"
+                    android:centerY="510"
+                    android:gradientRadius="230"
+                    android:startColor="#50000000"
+                    android:endColor="#00000000" />
+                </aapt:attr>
+            </path>
+
+            <path
             android:pathData="M180.545 204.8c-4.465 0 -8.084 3.619 -8.084 8.084v37.008c0 4.466 3.62 8.084 8.084 8.084c4.465 0 8.084 -3.618 8.084 -8.084v-37.008C188.629 208.419 185.009 204.8 180.545 204.8z"
             android:name="icon_left_hand"
             android:fillColor="#FFFFFF"

@@ -41,6 +41,8 @@ fun MainContent(
     databaseApp: DatabaseApp,
     onOpenHouseholdSelection: () -> Unit,
     onSignOut: () -> Unit,
+    onSyncProducts: () -> Unit,
+    syncing: Boolean,
 ) {
     val navController = rememberNavController()
     val context = LocalContext.current
@@ -135,7 +137,7 @@ fun MainContent(
             }
             composable(route = "productsView") {
                 productsViewModel.updateSelectedHousehold(viewModel.selectedHousehold)
-                ProductsView(productsViewModel)
+                ProductsView(productsViewModel, onSyncProducts, syncing)
             }
             composable(route = "scannerView") {
                 ScannerView(scannerViewModel)

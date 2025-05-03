@@ -1,5 +1,6 @@
 package com.lulakssoft.mygroceries.view.account
 
+import android.content.Context
 import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -53,7 +54,7 @@ class AuthViewModel(
             }
         }
 
-    fun signIn() =
+    fun signIn(context: Context) =
         viewModelScope.launch {
             _authState.value = AuthState.Loading
 
@@ -68,14 +69,17 @@ class AuthViewModel(
                 }
             if (_authState.value is AuthState.Authenticated) {
                 val userData = (_authState.value as AuthState.Authenticated).userData
-                syncAfterLogin(userData)
+                syncAfterLogin(userData, context)
             }
         }
 
-    private fun syncAfterLogin(userData: UserData) {
+    private fun syncAfterLogin(
+        userData: UserData,
+        context: Context,
+    ) {
         viewModelScope.launch {
             try {
-                val firestoreRepo = FirestoreHouseholdRepository()
+                val firestoreRepo = FirestoreHouseholdRepository(context)
                 val localHouseholdRepo =
                     HouseholdRepository(
                         DatabaseApp.getInstance(googleAuthUiClient.getContext()).householdDao,

@@ -14,6 +14,7 @@ import com.lulakssoft.mygroceries.dataservice.DataService
 import com.lulakssoft.mygroceries.dataservice.FirestoreHousehold
 import com.lulakssoft.mygroceries.dataservice.FirestoreHouseholdMember
 import com.lulakssoft.mygroceries.dataservice.FirestoreHouseholdRepository
+import com.lulakssoft.mygroceries.dataservice.FirestoreManager
 import com.lulakssoft.mygroceries.dataservice.FirestoreProduct
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -78,19 +79,36 @@ class HouseholdSyncService(
         }
     }
 
-    private suspend fun syncHouseholdProducts(
+    suspend fun syncHouseholdProducts(
         firestoreId: String,
         localHouseholdId: Int,
     ) {
         try {
+            val localProducts = localProductRepository.getProductsByHouseholdId(localHouseholdId)
+            for (product in localProducts) {
+                if (!product.isSynced) {
+                    Log.d(TAG, "Adding missing product to Firestore: ${product.productName}")
+                    try {
+                        FirestoreManager().addProductToHousehold(firestoreId, product)
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Error adding product to Firestore: ${product.productName}", e)
+                    }
+                }
+            }
+
             val remoteProducts = firestoreRepository.getHouseholdProducts(firestoreId)
 
+            // Lösche lokale Produkte, die nicht mehr in Firestore vorhanden sind
+            val remoteProductIds = remoteProducts.map { it.productUuid }
+            val productsToDelete = localProducts.filter { it.productUuid !in remoteProductIds }
+            for (product in productsToDelete) {
+                localProductRepository.deleteProduct(product)
+            }
             for (remoteProduct in remoteProducts) {
                 val productImage = dataService.getProductImage(remoteProduct.imageUrl)
                 val bitmap = BitmapFactory.decodeByteArray(productImage, 0, productImage.size)
                 val imageBitmap = bitmap.asImageBitmap()
                 val product = convertToLocalProduct(remoteProduct, localHouseholdId, firestoreId, imageBitmap)
-                Log.d(TAG, "Inserting product: $product")
                 localProductRepository.insertOrUpdateProduct(product)
             }
         } catch (e: Exception) {

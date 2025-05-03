@@ -66,6 +66,7 @@ class ScannerViewModel(
 
                 product = foundProduct
             } catch (e: Exception) {
+                Log.e("ScannerViewModel", "Error fetching product data: ${e.message}", e)
                 errorMessage = "Scanned product not found.\nPlease scan again."
             } finally {
                 loading = false

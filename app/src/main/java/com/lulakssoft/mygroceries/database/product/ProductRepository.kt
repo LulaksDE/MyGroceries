@@ -65,7 +65,7 @@ class ProductRepository(
 
     suspend fun deleteProduct(product: Product) {
         productDao.delete(product)
-        firestoreManager.deleteProductFromHousehold(product.firestoreId, product)
+        firestoreManager.deleteProductFromHousehold(product.firestoreId, product.productUuid)
     }
 
     suspend fun deleteAll() {

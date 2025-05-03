@@ -1,5 +1,6 @@
 package com.lulakssoft.mygroceries.view.home
 
+import android.content.Context
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -58,6 +59,7 @@ fun HouseholdSelectionScreen(
     viewModel: MainViewModel,
     authClient: GoogleAuthUiClient,
     databaseApp: DatabaseApp,
+    context: Context,
 ) {
     val householdRepository =
         remember {
@@ -73,7 +75,7 @@ fun HouseholdSelectionScreen(
     val households by viewModel.households.collectAsState(initial = emptyList())
     val refreshing = viewModel.isSyncing
     val pullRefreshState = rememberPullToRefreshState()
-    val onRefresh = { viewModel.syncHouseholds() }
+    val onRefresh = { viewModel.syncHouseholds(context) }
 
     var showCreateHouseholdDialog by remember { mutableStateOf(false) }
     var showJoinHouseholdDialog by remember { mutableStateOf(false) }

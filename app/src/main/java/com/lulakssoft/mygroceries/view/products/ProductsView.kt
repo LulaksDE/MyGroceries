@@ -30,6 +30,7 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -39,6 +40,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -57,8 +59,13 @@ import com.lulakssoft.mygroceries.database.product.Product
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ProductsView(viewModel: ProductsViewModel) {
+fun ProductsView(
+    viewModel: ProductsViewModel,
+    onSyncProducts: () -> Unit,
+    syncing: Boolean,
+) {
     var searchQuery by remember { mutableStateOf("") }
     var isGridView by remember { mutableStateOf(true) }
 
@@ -124,36 +131,41 @@ fun ProductsView(viewModel: ProductsViewModel) {
             }
         },
     ) { padding ->
-        if (viewModel.productList.isEmpty()) {
-            EmptyProductsView()
-        } else {
-            val filteredProducts =
-                viewModel.productList.filter {
-                    it.productName.contains(searchQuery, ignoreCase = true) ||
-                        searchQuery.isEmpty()
-                }
-
-            if (isGridView) {
-                LazyVerticalGrid(
-                    columns = GridCells.Fixed(2),
-                    contentPadding = PaddingValues(4.dp),
-                    horizontalArrangement = Arrangement.spacedBy(3.dp),
-                    verticalArrangement = Arrangement.spacedBy(3.dp),
-                    modifier = Modifier.padding(padding),
-                ) {
-                    items(count = filteredProducts.size) { size ->
-                        val product = filteredProducts[size]
-                        ProductGridItem(product)
-                    }
-                }
+        PullToRefreshBox(
+            isRefreshing = syncing,
+            onRefresh = onSyncProducts,
+        ) {
+            if (viewModel.productList.isEmpty()) {
+                EmptyProductsView()
             } else {
-                LazyColumn(
-                    contentPadding = PaddingValues(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(6.dp),
-                    modifier = Modifier.padding(padding),
-                ) {
-                    items(filteredProducts) { product ->
-                        ProductListItem(product)
+                val filteredProducts =
+                    viewModel.productList.filter {
+                        it.productName.contains(searchQuery, ignoreCase = true) ||
+                            searchQuery.isEmpty()
+                    }
+
+                if (isGridView) {
+                    LazyVerticalGrid(
+                        columns = GridCells.Fixed(2),
+                        contentPadding = PaddingValues(4.dp),
+                        horizontalArrangement = Arrangement.spacedBy(3.dp),
+                        verticalArrangement = Arrangement.spacedBy(3.dp),
+                        modifier = Modifier.padding(padding),
+                    ) {
+                        items(count = filteredProducts.size) { size ->
+                            val product = filteredProducts[size]
+                            ProductGridItem(product)
+                        }
+                    }
+                } else {
+                    LazyColumn(
+                        contentPadding = PaddingValues(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(6.dp),
+                        modifier = Modifier.padding(padding),
+                    ) {
+                        items(filteredProducts) { product ->
+                            ProductListItem(product)
+                        }
                     }
                 }
             }
@@ -180,12 +192,32 @@ fun ProductGridItem(product: Product) {
                         .height(100.dp)
                         .background(MaterialTheme.colorScheme.surfaceVariant),
             ) {
-                Image(
-                    bitmap = product.productImage,
-                    contentDescription = null,
-                    contentScale = ContentScale.FillWidth,
-                    modifier = Modifier.fillMaxSize(),
-                )
+                if (product.productImage.width < 4 || product.productImage.height < 4) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.no_image),
+                        contentDescription = "Product image",
+                        modifier = Modifier.fillMaxSize(),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                } else {
+                    Image(
+                        bitmap = product.productImage,
+                        contentDescription = "Product image",
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize(),
+                    )
+                }
+                if (!product.isSynced) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.not_synced),
+                        contentDescription = "Not synced",
+                        modifier =
+                            Modifier
+                                .size(product.productImage.width.dp)
+                                .align(Alignment.Center),
+                        tint = MaterialTheme.colorScheme.primary,
+                    )
+                }
             }
         }
 
@@ -285,12 +317,32 @@ fun ProductListItem(product: Product) {
                         .size(90.dp)
                         .background(MaterialTheme.colorScheme.surfaceVariant),
             ) {
-                Image(
-                    bitmap = product.productImage,
-                    contentDescription = null,
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize(),
-                )
+                if (product.productImage.width < 4 || product.productImage.height < 4) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.no_image),
+                        contentDescription = "Product image",
+                        modifier = Modifier.fillMaxSize(),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                } else {
+                    Image(
+                        bitmap = product.productImage,
+                        contentDescription = "Product image",
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize(),
+                    )
+                }
+                if (!product.isSynced) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.not_synced),
+                        contentDescription = "Not synced",
+                        modifier =
+                            Modifier
+                                .size(product.productImage.width.dp)
+                                .align(Alignment.Center),
+                        tint = MaterialTheme.colorScheme.primary,
+                    )
+                }
             }
             Column(
                 modifier =

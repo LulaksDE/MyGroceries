@@ -58,6 +58,7 @@ fun MainView(
                 viewModel = viewModel,
                 authClient = authClient,
                 databaseApp = databaseApp,
+                context = context,
             )
         }
 
@@ -70,6 +71,10 @@ fun MainView(
                     navController.navigate("householdSelection")
                 },
                 onSignOut = onSignOut,
+                onSyncProducts = {
+                    viewModel.syncProducts(context)
+                },
+                syncing = viewModel.isSyncing,
             )
         }
     }

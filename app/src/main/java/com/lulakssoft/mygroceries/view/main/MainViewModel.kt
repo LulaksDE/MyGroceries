@@ -1,5 +1,6 @@
 package com.lulakssoft.mygroceries.view.main
 
+import android.content.Context
 import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -66,7 +67,7 @@ class MainViewModel : ViewModel() {
     var isSyncing by mutableStateOf(false)
         private set
 
-    fun syncHouseholds() {
+    fun syncHouseholds(context: Context) {
         viewModelScope.launch {
             if (isSyncing) return@launch
 
@@ -77,12 +78,35 @@ class MainViewModel : ViewModel() {
                         HouseholdSyncService(
                             householdRepository,
                             productRepository,
-                            FirestoreHouseholdRepository(),
+                            FirestoreHouseholdRepository(context),
                         )
                     syncService.syncUserHouseholds(user.userId)
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "Error during household sync", e)
+            } finally {
+                isSyncing = false
+            }
+        }
+    }
+
+    fun syncProducts(context: Context) {
+        viewModelScope.launch {
+            if (isSyncing) return@launch
+
+            isSyncing = true
+            try {
+                currentUser?.let { user ->
+                    val syncService =
+                        HouseholdSyncService(
+                            householdRepository,
+                            productRepository,
+                            FirestoreHouseholdRepository(context),
+                        )
+                    syncService.syncHouseholdProducts(selectedHousehold.firestoreId.toString(), selectedHousehold.id)
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error during product sync", e)
             } finally {
                 isSyncing = false
             }

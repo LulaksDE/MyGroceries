@@ -1,15 +1,31 @@
 package com.lulakssoft.mygroceries.dataservice
 
+import android.content.Context
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.util.Log
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
 import java.time.LocalDateTime
 
-class FirestoreHouseholdRepository {
+class FirestoreHouseholdRepository(
+    private val context: Context,
+) {
     private val firestore = FirebaseFirestore.getInstance()
     private val TAG = "FirestoreRepository"
 
+    private fun isNetworkAvailable(): Boolean {
+        val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val network = connectivityManager.activeNetwork ?: return false
+        val capabilities = connectivityManager.getNetworkCapabilities(network) ?: return false
+        return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+    }
+
     suspend fun getUserHouseholds(userId: String): List<FirestoreHousehold> {
+        if (!isNetworkAvailable()) {
+            Log.e(TAG, "No internet connection available")
+            return emptyList()
+        }
         try {
             Log.d(TAG, "Fetching household memberships in firestore for user: $userId")
             val memberships =
@@ -100,6 +116,10 @@ class FirestoreHouseholdRepository {
     }
 
     suspend fun getHouseholdProducts(householdId: String): List<FirestoreProduct> {
+        if (!isNetworkAvailable()) {
+            Log.e(TAG, "No internet connection available")
+            return emptyList()
+        }
         try {
             Log.d(TAG, "Fetching household products in firestore for household: $householdId")
             val productsSnapshot =

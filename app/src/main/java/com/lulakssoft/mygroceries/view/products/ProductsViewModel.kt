@@ -28,4 +28,18 @@ class ProductsViewModel(
             productList = repository.getProductsByFirestoreId(firestoreId)
         }
     }
+
+    private fun deleteProduct(product: Product) {
+        viewModelScope.launch {
+            repository.deleteProduct(product)
+        }
+    }
+
+    fun deleteSelectedProducts(products: List<Product>) {
+        viewModelScope.launch {
+            for (product in products) {
+                deleteProduct(product)
+            }
+        }
+    }
 }

@@ -1,7 +1,9 @@
 package com.lulakssoft.mygroceries.view.products
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,9 +22,11 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.List
@@ -68,66 +72,121 @@ fun ProductsView(
 ) {
     var searchQuery by remember { mutableStateOf("") }
     var isGridView by remember { mutableStateOf(true) }
+    var selectionMode by remember { mutableStateOf(false) }
+    var selectedProducts by remember { mutableStateOf(setOf<Product>()) }
 
     Scaffold(
         topBar = {
             Column {
-                OutlinedTextField(
-                    value = searchQuery,
-                    onValueChange = { searchQuery = it },
-                    modifier =
-                        Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                    placeholder = { Text("Search products...") },
-                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
-                    trailingIcon = {
-                        if (searchQuery.isNotEmpty()) {
-                            IconButton(onClick = { searchQuery = "" }) {
-                                Icon(Icons.Default.Close, contentDescription = "Delete search query")
+                if (selectionMode) {
+                    Row(
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            "${selectedProducts.size} selected",
+                            style = MaterialTheme.typography.titleMedium,
+                        )
+                        Row {
+                            IconButton(onClick = {
+                                selectionMode = false
+                                selectedProducts = emptySet()
+                            }) {
+                                Icon(Icons.Default.Close, contentDescription = "Cancel selection")
                             }
-                        }
-                    },
-                    singleLine = true,
-                    shape = RoundedCornerShape(24.dp),
-                )
-
-                Row(
-                    modifier =
-                        Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Text(
-                        "${viewModel.productList.size} products",
-                        style = MaterialTheme.typography.titleMedium,
-                    )
-
-                    Row {
-                        IconToggleButton(
-                            checked = !isGridView,
-                            onCheckedChange = { isGridView = !it },
-                        ) {
-                            if (!isGridView) {
+                            IconButton(
+                                onClick = {
+                                    viewModel.deleteSelectedProducts(selectedProducts.toList())
+                                    selectionMode = false
+                                    selectedProducts = emptySet()
+                                },
+                                enabled = selectedProducts.isNotEmpty(),
+                            ) {
                                 Icon(
-                                    imageVector = Icons.AutoMirrored.Filled.List,
-                                    contentDescription = "Listlayout",
-                                    tint = MaterialTheme.colorScheme.primary,
-                                )
-                            } else {
-                                Icon(
-                                    painter = painterResource(id = R.drawable.baseline_grid_view_24),
-                                    contentDescription = "Gridlayout",
-                                    tint = MaterialTheme.colorScheme.primary,
+                                    painter = painterResource(id = R.drawable.baseline_delete_24),
+                                    contentDescription = "Delete selected products",
+                                    tint =
+                                        if (selectedProducts.isEmpty()) {
+                                            MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+                                        } else {
+                                            MaterialTheme.colorScheme.error
+                                        },
                                 )
                             }
                         }
                     }
-                }
+                } else {
+                    OutlinedTextField(
+                        value = searchQuery,
+                        onValueChange = { searchQuery = it },
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                        placeholder = { Text("Search products...") },
+                        leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+                        trailingIcon = {
+                            if (searchQuery.isNotEmpty()) {
+                                IconButton(onClick = { searchQuery = "" }) {
+                                    Icon(
+                                        Icons.Default.Close,
+                                        contentDescription = "Delete search query",
+                                    )
+                                }
+                            }
+                        },
+                        singleLine = true,
+                        shape = RoundedCornerShape(24.dp),
+                    )
 
-                HorizontalDivider()
+                    Row(
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            "${viewModel.productList.size} products",
+                            style = MaterialTheme.typography.titleMedium,
+                        )
+
+                        Row {
+                            IconButton(onClick = { selectionMode = true }) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.baseline_select_all_24),
+                                    contentDescription = "Select all",
+                                    tint = MaterialTheme.colorScheme.primary,
+                                )
+                            }
+                            IconToggleButton(
+                                checked = !isGridView,
+                                onCheckedChange = { isGridView = !it },
+                            ) {
+                                if (!isGridView) {
+                                    Icon(
+                                        imageVector = Icons.AutoMirrored.Filled.List,
+                                        contentDescription = "Listlayout",
+                                        tint = MaterialTheme.colorScheme.primary,
+                                    )
+                                } else {
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.baseline_grid_view_24),
+                                        contentDescription = "Gridlayout",
+                                        tint = MaterialTheme.colorScheme.primary,
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    HorizontalDivider()
+                }
             }
         },
     ) { padding ->
@@ -154,7 +213,27 @@ fun ProductsView(
                     ) {
                         items(count = filteredProducts.size) { size ->
                             val product = filteredProducts[size]
-                            ProductGridItem(product)
+                            ProductGridItem(
+                                product = product,
+                                isSelected = selectedProducts.contains(product),
+                                selectionMode = selectionMode,
+                                onSelect = {
+                                    if (selectionMode) {
+                                        selectedProducts =
+                                            if (selectedProducts.contains(product)) {
+                                                selectedProducts - product
+                                            } else {
+                                                selectedProducts + product
+                                            }
+                                    }
+                                },
+                                onLongPress = {
+                                    if (!selectionMode) {
+                                        selectionMode = true
+                                        selectedProducts = setOf(product)
+                                    }
+                                },
+                            )
                         }
                     }
                 } else {
@@ -164,7 +243,27 @@ fun ProductsView(
                         modifier = Modifier.padding(padding),
                     ) {
                         items(filteredProducts) { product ->
-                            ProductListItem(product)
+                            ProductListItem(
+                                product = product,
+                                isSelected = selectedProducts.contains(product),
+                                selectionMode = selectionMode,
+                                onSelect = {
+                                    if (selectionMode) {
+                                        selectedProducts =
+                                            if (selectedProducts.contains(product)) {
+                                                selectedProducts - product
+                                            } else {
+                                                selectedProducts + product
+                                            }
+                                    }
+                                },
+                                onLongPress = {
+                                    if (!selectionMode) {
+                                        selectionMode = true
+                                        selectedProducts = setOf(product)
+                                    }
+                                },
+                            )
                         }
                     }
                 }
@@ -173,14 +272,25 @@ fun ProductsView(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun ProductGridItem(product: Product) {
+fun ProductGridItem(
+    product: Product,
+    isSelected: Boolean,
+    selectionMode: Boolean,
+    onSelect: () -> Unit,
+    onLongPress: () -> Unit,
+) {
     Card(
         modifier =
             Modifier
                 .fillMaxWidth()
                 .aspectRatio(0.9f)
-                .padding(4.dp),
+                .padding(4.dp)
+                .combinedClickable(
+                    onClick = { onSelect() },
+                    onLongClick = { onLongPress() },
+                ),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
         shape = RoundedCornerShape(8.dp),
     ) {
@@ -206,6 +316,35 @@ fun ProductGridItem(product: Product) {
                         contentScale = ContentScale.Crop,
                         modifier = Modifier.fillMaxSize(),
                     )
+                }
+                if (selectionMode) {
+                    Box(
+                        modifier =
+                            Modifier
+                                .size(48.dp)
+                                .padding(4.dp)
+                                .background(
+                                    color =
+                                        if (isSelected) {
+                                            MaterialTheme.colorScheme.primary
+                                        } else {
+                                            MaterialTheme.colorScheme.surface.copy(alpha = 0.7f)
+                                        },
+                                    shape = CircleShape,
+                                ).align(Alignment.TopEnd),
+                    ) {
+                        if (isSelected) {
+                            Icon(
+                                imageVector = Icons.Default.Check,
+                                contentDescription = "Selected",
+                                tint = MaterialTheme.colorScheme.onPrimary,
+                                modifier =
+                                    Modifier
+                                        .size(16.dp)
+                                        .align(Alignment.Center),
+                            )
+                        }
+                    }
                 }
                 if (!product.isSynced) {
                     Icon(
@@ -300,10 +439,21 @@ fun ProductGridItem(product: Product) {
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun ProductListItem(product: Product) {
+fun ProductListItem(
+    product: Product,
+    isSelected: Boolean,
+    selectionMode: Boolean,
+    onSelect: () -> Unit,
+    onLongPress: () -> Unit,
+) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier =
+            Modifier.fillMaxWidth().combinedClickable(
+                onClick = { onSelect() },
+                onLongClick = { onLongPress() },
+            ),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         shape = RoundedCornerShape(12.dp),
     ) {
@@ -331,6 +481,35 @@ fun ProductListItem(product: Product) {
                         contentScale = ContentScale.Crop,
                         modifier = Modifier.fillMaxSize(),
                     )
+                }
+                if (selectionMode) {
+                    Box(
+                        modifier =
+                            Modifier
+                                .size(48.dp)
+                                .padding(4.dp)
+                                .background(
+                                    color =
+                                        if (isSelected) {
+                                            MaterialTheme.colorScheme.primary
+                                        } else {
+                                            MaterialTheme.colorScheme.surface.copy(alpha = 0.7f)
+                                        },
+                                    shape = CircleShape,
+                                ).align(Alignment.TopEnd),
+                    ) {
+                        if (isSelected) {
+                            Icon(
+                                imageVector = Icons.Default.Check,
+                                contentDescription = "Selected",
+                                tint = MaterialTheme.colorScheme.onPrimary,
+                                modifier =
+                                    Modifier
+                                        .size(16.dp)
+                                        .align(Alignment.Center),
+                            )
+                        }
+                    }
                 }
                 if (!product.isSynced) {
                     Icon(

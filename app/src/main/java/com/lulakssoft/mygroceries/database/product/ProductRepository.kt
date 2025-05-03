@@ -18,10 +18,31 @@ class ProductRepository(
 
     suspend fun insertOrUpdateProduct(product: Product) {
         val existingProduct = productDao.selectProductByUuid(product.productUuid)
+        Log.d("ProductRepository", "Recieved local product: ${existingProduct?.productUuid}")
         if (existingProduct == null) {
             productDao.insertProduct(product)
             Log.d("ProductRepository", "Inserted new product to local database: ${product.productName}")
         } else {
+            var productChanged = false
+            for (field in product.javaClass.declaredFields) {
+                if (field.name == "id") continue
+                if (field.name == "productImage") continue
+                field.isAccessible = true
+                val newValue = field.get(product)
+                val existingValue = field.get(existingProduct)
+
+                if (newValue != existingValue) {
+                    productChanged = true
+                    Log.d(
+                        "ProductRepository",
+                        "Field: ${field.name}, New Value: $newValue, Existing Value: $existingValue",
+                    )
+                }
+            }
+            if (!productChanged) {
+                Log.d("ProductRepository", "No changes detected for product: ${product.productName}")
+                return
+            }
             productDao.updateProduct(
                 existingProduct.id,
                 product.productName,
@@ -31,7 +52,10 @@ class ProductRepository(
                 product.productBestBeforeDate,
                 product.productEntryDate,
                 product.productImageUrl,
+                product.isSynced,
             )
+
+            Log.d("ProductRepository", "Updated existing product in local database: ${product.productName}")
         }
     }
 
@@ -41,6 +65,7 @@ class ProductRepository(
 
     suspend fun deleteProduct(product: Product) {
         productDao.delete(product)
+        firestoreManager.deleteProductFromHousehold(product.firestoreId, product)
     }
 
     suspend fun deleteAll() {

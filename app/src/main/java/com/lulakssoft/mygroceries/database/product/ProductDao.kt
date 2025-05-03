@@ -26,7 +26,7 @@ interface ProductDao {
     suspend fun insertProduct(product: Product)
 
     @Query(
-        "UPDATE product_table SET productName = :productName, productBrand = :productBrand, productBarcode = :productBarcode, productQuantity = :productQuantity, productBestBeforeDate = :productBestBeforeDate, productEntryDate = :productEntryDate, productImageUrl = :productImageUrl WHERE id = :id",
+        "UPDATE product_table SET productName = :productName, productBrand = :productBrand, productBarcode = :productBarcode, productQuantity = :productQuantity, productBestBeforeDate = :productBestBeforeDate, productEntryDate = :productEntryDate, productImageUrl = :productImageUrl, isSynced = :isSynced WHERE id = :id",
     )
     suspend fun updateProduct(
         id: Int,
@@ -37,6 +37,7 @@ interface ProductDao {
         productBestBeforeDate: LocalDate,
         productEntryDate: LocalDateTime,
         productImageUrl: String? = null,
+        isSynced: Boolean,
     )
 
     @Query("DELETE FROM product_table")

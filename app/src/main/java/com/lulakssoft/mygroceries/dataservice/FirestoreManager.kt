@@ -192,4 +192,23 @@ class FirestoreManager {
             throw e
         }
     }
+
+    suspend fun deleteProductFromHousehold(
+        firestoreId: String,
+        productUuid: String,
+    ) {
+        try {
+            firestore
+                .collection("households")
+                .document(firestoreId)
+                .collection("products")
+                .document(productUuid)
+                .delete()
+                .await()
+            Log.d(TAG, "Product deleted successfully from firestore")
+        } catch (e: Exception) {
+            Log.e(TAG, "Error while deleting product from firestore", e)
+            throw e
+        }
+    }
 }

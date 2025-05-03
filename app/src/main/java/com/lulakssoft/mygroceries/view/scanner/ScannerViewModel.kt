@@ -58,7 +58,7 @@ class ScannerViewModel(
 
             try {
                 val foundProduct = dataService.getProductDataFromBarCode(barcode)
-                Log.d("ProductsViewModel", "Product found: $foundProduct")
+                Log.d("ScannerViewModel", "Product found: $foundProduct")
 
                 val loadedUserImage = dataService.getProductImage(foundProduct.product.imageUrl)
                 val bitmap = BitmapFactory.decodeByteArray(loadedUserImage, 0, loadedUserImage.size)
@@ -66,7 +66,7 @@ class ScannerViewModel(
 
                 product = foundProduct
             } catch (e: Exception) {
-                errorMessage = e.message.toString()
+                errorMessage = "Scanned product not found.\nPlease scan again."
             } finally {
                 loading = false
             }
@@ -75,14 +75,17 @@ class ScannerViewModel(
 
     fun onQrCodeScanned(qrCode: String) {
         scannedCode = qrCode
-        // Perform additional logic like fetching product details
-        Log.d("ProductsViewModel", "QR Code Scanned: $scannedCode")
+        Log.d("ScannerViewModel", "QR Code Scanned: $scannedCode")
         scannedSomething = true
         getProduct(scannedCode)
     }
 
     fun insert() =
         viewModelScope.launch {
+            if (product.product.imageUrl.isEmpty()) {
+                errorMessage = "Product information is incomplete, or missing in Database.\nPlease scan again."
+                return@launch
+            }
             repository.insertProduct(
                 Product(
                     0,

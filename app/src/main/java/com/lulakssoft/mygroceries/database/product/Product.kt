@@ -36,4 +36,5 @@ data class Product(
     val productEntryDate: LocalDateTime,
     val productImage: ImageBitmap,
     val productImageUrl: String? = null,
+    val isSynced: Boolean = false,
 )

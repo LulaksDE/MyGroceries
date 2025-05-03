@@ -79,7 +79,20 @@ fun ScannerView(viewModel: ScannerViewModel) {
             modifier = Modifier.padding(innerPadding),
         ) {
             if (viewModel.scannedSomething) {
-                EnhancedProductInfoDialog(viewModel)
+                if (viewModel.errorMessage.isEmpty()) {
+                    EnhancedProductInfoDialog(viewModel)
+                } else {
+                    AlertDialog(
+                        onDismissRequest = { viewModel.scannedSomething = false },
+                        title = { Text("Error") },
+                        text = { Text(viewModel.errorMessage, color = MaterialTheme.colorScheme.error) },
+                        confirmButton = {
+                            TextButton(onClick = { viewModel.scannedSomething = false }) {
+                                Text("OK")
+                            }
+                        },
+                    )
+                }
             } else {
                 EnhancedProductViewWithScanner { qrCode ->
                     viewModel.onQrCodeScanned(qrCode)

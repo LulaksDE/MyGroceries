@@ -171,6 +171,7 @@ class HouseholdSyncService(
             productName = remoteProduct.productName,
             productQuantity = remoteProduct.productQuantity,
             productImage = productImage,
+            isSynced = true,
         )
     }
 }

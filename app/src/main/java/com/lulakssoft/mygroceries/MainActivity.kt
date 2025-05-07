@@ -1,5 +1,6 @@
 package com.lulakssoft.mygroceries
 
+import android.content.pm.ActivityInfo
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -23,6 +24,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         FirebaseApp.initializeApp(this)
+        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LOCKED
         enableEdgeToEdge()
         setContent {
             MyGroceriesTheme {

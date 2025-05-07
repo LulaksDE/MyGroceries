@@ -194,6 +194,9 @@ fun ProductsView(
             isRefreshing = syncing,
             onRefresh = onSyncProducts,
         ) {
+            if (syncing) {
+                selectionMode = false
+            }
             if (viewModel.productList.isEmpty()) {
                 EmptyProductsView()
             } else {

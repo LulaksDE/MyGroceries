@@ -6,6 +6,7 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import com.lulakssoft.mygroceries.database.household.Household
+import com.lulakssoft.mygroceries.database.household.HouseholdActivity
 import com.lulakssoft.mygroceries.database.household.HouseholdDao
 import com.lulakssoft.mygroceries.database.household.HouseholdInvitation
 import com.lulakssoft.mygroceries.database.household.HouseholdInvitationDao
@@ -13,7 +14,7 @@ import com.lulakssoft.mygroceries.database.household.HouseholdMember
 import com.lulakssoft.mygroceries.database.household.HouseholdMemberDao
 
 @Database(
-    entities = [Product::class, Household::class, HouseholdMember::class, HouseholdInvitation::class],
+    entities = [Product::class, Household::class, HouseholdMember::class, HouseholdInvitation::class, HouseholdActivity::class],
     version = 1,
     exportSchema = false,
 )

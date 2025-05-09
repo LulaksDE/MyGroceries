@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.Query
+import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -42,6 +43,18 @@ interface HouseholdDao {
         name: String,
         isPrivate: Boolean,
     )
+
+    @Query("SELECT * FROM household_activity_table WHERE firestoreId = :firestoreId ORDER BY timestamp DESC LIMIT 10")
+    suspend fun getActivitiesForHousehold(firestoreId: String): List<HouseholdActivity>
+
+    @Insert
+    suspend fun insertActivity(activity: HouseholdActivity)
+
+    @Query("SELECT * FROM household_activity_table WHERE activityId = :activityId LIMIT 1")
+    suspend fun getActivityById(activityId: String): HouseholdActivity?
+
+    @Update
+    suspend fun updateActivity(activity: HouseholdActivity)
 }
 
 @Dao

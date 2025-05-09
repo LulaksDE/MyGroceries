@@ -5,6 +5,7 @@ import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.util.Log
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Query
 import kotlinx.coroutines.tasks.await
 import java.time.LocalDateTime
 
@@ -152,6 +153,36 @@ class FirestoreHouseholdRepository(
             return products
         } catch (e: Exception) {
             Log.e(TAG, "Error fetching household products", e)
+            return emptyList()
+        }
+    }
+
+    suspend fun getHouseholdActivities(firestoreId: String): List<FirestoreActivity> {
+        try {
+            val activitiesRef =
+                firestore
+                    .collection("households")
+                    .document(firestoreId)
+                    .collection("activities")
+                    .orderBy("timestamp", Query.Direction.DESCENDING)
+                    .limit(10)
+                    .get()
+                    .await()
+
+            return activitiesRef.documents.mapNotNull { document ->
+                val data = document.data ?: return@mapNotNull null
+
+                FirestoreActivity(
+                    activityId = data["activityId"] as String,
+                    userId = data["userId"] as String,
+                    userName = data["userName"] as String,
+                    activityType = data["activityType"] as String,
+                    details = data["details"] as String,
+                    timestamp = data["timestamp"] as String,
+                )
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error fetching household activities", e)
             return emptyList()
         }
     }

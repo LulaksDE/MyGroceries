@@ -128,6 +128,8 @@ fun MainContent(
             composable(route = "householdView") {
                 householdViewModel.updateSelectedHousehold(viewModel.selectedHousehold.firestoreId.toString())
                 householdViewModel.updateMemberCount(viewModel.selectedHousehold.firestoreId.toString())
+                householdViewModel.updateProductCount(viewModel.selectedHousehold.firestoreId.toString())
+                householdViewModel.updateActivityList(viewModel.selectedHousehold.firestoreId.toString())
                 HouseholdView(
                     householdViewModel,
                     navigateToManagement = {

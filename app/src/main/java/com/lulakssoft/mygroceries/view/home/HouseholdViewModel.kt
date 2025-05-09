@@ -7,6 +7,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.lulakssoft.mygroceries.database.household.HouseholdActivity
 import com.lulakssoft.mygroceries.database.household.HouseholdMember
 import com.lulakssoft.mygroceries.database.household.HouseholdRepository
 import com.lulakssoft.mygroceries.database.product.DatabaseApp
@@ -21,6 +22,8 @@ class HouseholdViewModel(
     private val authClient: GoogleAuthUiClient,
 ) : ViewModel() {
     var memberCount by mutableIntStateOf(0)
+    var productCount by mutableIntStateOf(0)
+    var activityList by mutableStateOf<List<HouseholdActivity>>(emptyList())
     var userData by mutableStateOf<UserData?>(null)
     var currentMemberRole by mutableStateOf<HouseholdMember?>(null)
     private var onSignOutCallback: (() -> Unit)? = null
@@ -72,6 +75,22 @@ class HouseholdViewModel(
         viewModelScope.launch {
             householdRepository.getMemberCountForHousehold(firestoreId).let { count ->
                 memberCount = count
+            }
+        }
+    }
+
+    fun updateProductCount(firestoreId: String) {
+        viewModelScope.launch {
+            productRepository.getProductsByFirestoreId(firestoreId).let { count ->
+                productCount = count.size
+            }
+        }
+    }
+
+    fun updateActivityList(firestoreId: String) {
+        viewModelScope.launch {
+            householdRepository.getActivitiesForHousehold(firestoreId).let { activities ->
+                activityList = activities
             }
         }
     }

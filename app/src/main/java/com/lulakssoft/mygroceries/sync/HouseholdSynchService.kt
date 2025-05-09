@@ -4,13 +4,16 @@ import android.graphics.BitmapFactory
 import android.util.Log
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
+import com.lulakssoft.mygroceries.database.household.ActivityType
 import com.lulakssoft.mygroceries.database.household.Household
+import com.lulakssoft.mygroceries.database.household.HouseholdActivity
 import com.lulakssoft.mygroceries.database.household.HouseholdMember
 import com.lulakssoft.mygroceries.database.household.HouseholdRepository
 import com.lulakssoft.mygroceries.database.household.MemberRole
 import com.lulakssoft.mygroceries.database.product.Product
 import com.lulakssoft.mygroceries.database.product.ProductRepository
 import com.lulakssoft.mygroceries.dataservice.DataService
+import com.lulakssoft.mygroceries.dataservice.FirestoreActivity
 import com.lulakssoft.mygroceries.dataservice.FirestoreHousehold
 import com.lulakssoft.mygroceries.dataservice.FirestoreHouseholdMember
 import com.lulakssoft.mygroceries.dataservice.FirestoreHouseholdRepository
@@ -54,6 +57,12 @@ class HouseholdSyncService(
                     syncHouseholdProducts(remoteHousehold.firestoreId, householdId.toInt())
                 } catch (e: Exception) {
                     Log.e(TAG, "Error syncing household products for household ID: ${remoteHousehold.firestoreId}", e)
+                }
+                try {
+                    // Hole und synchronisiere Aktivitäten
+                    syncHouseholdActivities(remoteHousehold.firestoreId, householdId.toInt())
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error syncing household activities for household ID: ${remoteHousehold.firestoreId}", e)
                 }
             }
             Log.d(TAG, "Household sync completed")
@@ -114,6 +123,49 @@ class HouseholdSyncService(
         } catch (e: Exception) {
             Log.e(TAG, "Error syncing household products", e)
         }
+    }
+
+    private suspend fun syncHouseholdActivities(
+        firestoreId: String,
+        localHouseholdId: Int,
+    ) {
+        try {
+            val remoteActivities = firestoreRepository.getHouseholdActivities(firestoreId)
+
+            for (remoteActivity in remoteActivities) {
+                val activity = convertToLocalActivity(remoteActivity, localHouseholdId, firestoreId)
+                localHouseholdRepository.insertOrUpdateActivity(activity)
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error syncing household activities", e)
+        }
+    }
+
+    private fun convertToLocalActivity(
+        remoteActivity: FirestoreActivity,
+        localHouseholdId: Int,
+        firestoreId: String,
+    ): HouseholdActivity {
+        val activityType =
+            try {
+                ActivityType.valueOf(remoteActivity.activityType)
+            } catch (e: Exception) {
+                ActivityType.PRODUCT_ADDED // Standardtyp als Fallback
+            }
+
+        val timestamp = convertToLocalDateTime(remoteActivity.timestamp)
+
+        return HouseholdActivity(
+            id = 0, // Wird von Room automatisch zugewiesen
+            householdId = localHouseholdId,
+            firestoreId = firestoreId,
+            activityId = remoteActivity.activityId,
+            userId = remoteActivity.userId,
+            userName = remoteActivity.userName,
+            activityType = activityType,
+            details = remoteActivity.details,
+            timestamp = timestamp,
+        )
     }
 
     private fun convertToLocalDateTime(date: String): LocalDateTime =

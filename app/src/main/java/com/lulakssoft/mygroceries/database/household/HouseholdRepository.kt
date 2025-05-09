@@ -188,6 +188,18 @@ class HouseholdRepository(
         }
     }
 
+    suspend fun insertOrUpdateActivity(activity: HouseholdActivity) {
+        val existingActivity = householdDao.getActivityById(activity.activityId)
+        if (existingActivity == null) {
+            householdDao.insertActivity(activity)
+        } else {
+            householdDao.updateActivity(activity)
+        }
+    }
+
+    suspend fun getActivitiesForHousehold(firestoreId: String): List<HouseholdActivity> =
+        householdDao.getActivitiesForHousehold(firestoreId)
+
     suspend fun getUserMembershipInHousehold(
         firestoreId: String,
         userId: String,

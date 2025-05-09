@@ -4,12 +4,14 @@ import android.content.ContentValues.TAG
 import android.util.Log
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
+import com.lulakssoft.mygroceries.database.household.ActivityType
 import com.lulakssoft.mygroceries.database.household.Household
 import com.lulakssoft.mygroceries.database.household.HouseholdInvitation
 import com.lulakssoft.mygroceries.database.product.Product
 import kotlinx.coroutines.tasks.await
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import java.util.UUID
 
 class FirestoreManager {
     private val firestore = FirebaseFirestore.getInstance()
@@ -44,6 +46,13 @@ class FirestoreManager {
                 .await()
 
             syncNewMember(household.firestoreId, household.createdByUserId, userName, "OWNER")
+            logActivity(
+                household.firestoreId,
+                household.createdByUserId,
+                userName,
+                ActivityType.HOUSEHOLD_CREATED,
+                "Household created: ${household.householdName}",
+            )
             Log.d("FirestoreManager", "Household synchronized to Firestore")
         } catch (e: Exception) {
             Log.e("FirestoreManager", "Failed to sync household: ${e.message}")
@@ -153,6 +162,15 @@ class FirestoreManager {
                         "joinedAt" to FieldValue.serverTimestamp(),
                     ),
                 )
+
+            logActivity(
+                firestoreId,
+                userId,
+                userName,
+                ActivityType.MEMBER_JOINED,
+                "Member added: $userName with role: $role",
+            )
+
             Log.d("FirestoreManager", "New member synchronized to Firestore")
         } catch (e: Exception) {
             Log.e("FirestoreManager", "Failed to sync new member: ${e.message}")
@@ -187,6 +205,14 @@ class FirestoreManager {
                     .await()
             Log.d(TAG, "Product added successfully to firestore with ID: ${product.productUuid}")
 
+            logActivity(
+                firestoreId,
+                product.creatorId,
+                getUserName(product.firestoreId, product.creatorId),
+                ActivityType.PRODUCT_ADDED,
+                "Product added: ${product.productName}",
+            )
+
             return true
         } catch (e: Exception) {
             Log.e(TAG, "Error while adding product to firestore", e)
@@ -194,22 +220,81 @@ class FirestoreManager {
         }
     }
 
-    suspend fun deleteProductFromHousehold(
-        firestoreId: String,
-        productUuid: String,
-    ) {
+    suspend fun deleteProductFromHousehold(product: Product) {
         try {
             firestore
                 .collection("households")
-                .document(firestoreId)
+                .document(product.firestoreId)
                 .collection("products")
-                .document(productUuid)
+                .document(product.productUuid)
                 .delete()
                 .await()
             Log.d(TAG, "Product deleted successfully from firestore")
+
+            logActivity(
+                product.firestoreId,
+                product.productUuid,
+                getUserName(product.firestoreId, product.creatorId),
+                ActivityType.PRODUCT_REMOVED,
+                "Product deleted: ${product.productName}",
+            )
         } catch (e: Exception) {
             Log.e(TAG, "Error while deleting product from firestore", e)
             throw e
         }
     }
+
+    suspend fun logActivity(
+        firestoreId: String,
+        userId: String,
+        userName: String,
+        activityType: ActivityType,
+        details: String,
+    ): String {
+        val activityId = UUID.randomUUID().toString()
+        try {
+            val activityData =
+                hashMapOf(
+                    "activityId" to activityId,
+                    "userId" to userId,
+                    "userName" to userName,
+                    "activityType" to activityType,
+                    "details" to details,
+                    "timestamp" to LocalDateTime.now().format(dateTimeFormatter),
+                )
+
+            firestore
+                .collection("households")
+                .document(firestoreId)
+                .collection("activities")
+                .document(activityId)
+                .set(activityData)
+                .await()
+
+            Log.d(TAG, "Activity logged to Firestore: $activityType by $userName")
+            return activityId
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to log activity to Firestore", e)
+            throw e
+        }
+    }
+
+    private suspend fun getUserName(
+        firestoreId: String,
+        userId: String,
+    ): String =
+        try {
+            val userDoc =
+                firestore
+                    .collection("households")
+                    .document(firestoreId)
+                    .collection("members")
+                    .document(userId)
+                    .get()
+                    .await()
+            userDoc.getString("userName") ?: "Unknown User"
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to get username for userId: $userId", e)
+            "Unknown User"
+        }
 }

@@ -1,8 +1,10 @@
 package com.lulakssoft.mygroceries.view.home
 
 import android.content.Context
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -15,6 +17,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
@@ -41,8 +44,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.lulakssoft.mygroceries.R
 import com.lulakssoft.mygroceries.database.household.Household
@@ -51,6 +59,8 @@ import com.lulakssoft.mygroceries.database.product.DatabaseApp
 import com.lulakssoft.mygroceries.view.account.GoogleAuthUiClient
 import com.lulakssoft.mygroceries.view.main.MainViewModel
 import com.lulakssoft.mygroceries.view.management.HouseholdManagementViewModel
+import kotlin.math.absoluteValue
+import kotlin.random.Random
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -256,38 +266,94 @@ private fun HouseholdItem(
     household: Household,
     onClick: (Household) -> Unit,
 ) {
+    val seed = household.householdName.hashCode().absoluteValue
+    val random = Random(seed)
+    val startColor =
+        Color(
+            red = random.nextFloat() * 0.5f + 0.3f,
+            green = random.nextFloat() * 0.5f + 0.3f,
+            blue = random.nextFloat() * 0.5f + 0.3f,
+            alpha = 1.0f,
+        )
+    val endColor =
+        Color(
+            red = random.nextFloat() * 0.3f + 0.1f,
+            green = random.nextFloat() * 0.3f + 0.1f,
+            blue = random.nextFloat() * 0.3f + 0.1f,
+            alpha = 1.0f,
+        )
+
+    val gradientBrush =
+        Brush.linearGradient(
+            colors = listOf(startColor, endColor),
+            start = Offset(0f, 0f),
+            end = Offset(1000f, 1000f),
+        )
+
     Card(
         modifier =
             Modifier
                 .fillMaxWidth()
                 .padding(vertical = 8.dp, horizontal = 8.dp)
+                .height(110.dp)
                 .clickable(enabled = true) { onClick(household) },
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(16.dp),
     ) {
-        Row(
-            modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Icon(
-                imageVector = Icons.Default.Home,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
+        Box(modifier = Modifier.fillMaxSize()) {
+            Box(
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .background(gradientBrush),
             )
-            Spacer(modifier = Modifier.width(16.dp))
-            Column {
-                Text(
-                    text = household.householdName,
-                    style = MaterialTheme.typography.titleMedium,
-                )
-                Text(
-                    text = "Created: ${household.createdAt.toLocalDate()}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+
+            Row(
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Box(
+                    modifier =
+                        Modifier
+                            .size(56.dp)
+                            .background(Color.White.copy(alpha = 0.2f), shape = CircleShape)
+                            .padding(12.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Home,
+                        contentDescription = null,
+                        tint = Color.White,
+                        modifier = Modifier.size(32.dp),
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(16.dp))
+
+                Column {
+                    Text(
+                        text = household.householdName,
+                        style = MaterialTheme.typography.titleMedium,
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold,
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "Created: ${household.createdAt.toLocalDate()}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color.White.copy(alpha = 0.8f),
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "Tap to select",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color.White.copy(alpha = 0.6f),
+                        fontSize = 12.sp,
+                    )
+                }
             }
         }
     }

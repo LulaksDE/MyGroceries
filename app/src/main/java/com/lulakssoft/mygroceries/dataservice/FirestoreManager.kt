@@ -162,7 +162,7 @@ class FirestoreManager {
     suspend fun addProductToHousehold(
         firestoreId: String,
         product: Product,
-    ) {
+    ): Boolean {
         try {
             val productData =
                 hashMapOf(
@@ -185,8 +185,9 @@ class FirestoreManager {
                     .document(product.productUuid)
                     .set(productData)
                     .await()
+            Log.d(TAG, "Product added successfully to firestore with ID: ${product.productUuid}")
 
-            Log.d(TAG, "Product added successfully to firestore")
+            return true
         } catch (e: Exception) {
             Log.e(TAG, "Error while adding product to firestore", e)
             throw e

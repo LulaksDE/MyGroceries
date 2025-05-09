@@ -26,10 +26,10 @@ interface ProductDao {
     suspend fun insertProduct(product: Product)
 
     @Query(
-        "UPDATE product_table SET productName = :productName, productBrand = :productBrand, productBarcode = :productBarcode, productQuantity = :productQuantity, productBestBeforeDate = :productBestBeforeDate, productEntryDate = :productEntryDate, productImageUrl = :productImageUrl, isSynced = :isSynced WHERE id = :id",
+        "UPDATE product_table SET productName = :productName, productBrand = :productBrand, productBarcode = :productBarcode, productQuantity = :productQuantity, productBestBeforeDate = :productBestBeforeDate, productEntryDate = :productEntryDate, productImageUrl = :productImageUrl, isSynced = :isSynced WHERE productUuid = :uuid",
     )
     suspend fun updateProduct(
-        id: Int,
+        uuid: String,
         productName: String,
         productBrand: String,
         productBarcode: String,

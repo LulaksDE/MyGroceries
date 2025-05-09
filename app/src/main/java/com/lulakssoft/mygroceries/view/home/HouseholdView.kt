@@ -70,7 +70,7 @@ fun HouseholdView(
         Column(
             modifier =
                 Modifier
-                    .padding(padding)
+                    .padding(top = 0.dp, bottom = 0.dp, start = 4.dp, end = 4.dp)
                     .fillMaxSize()
                     .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
@@ -222,7 +222,7 @@ private fun EmptyActivityList() {
 fun ActivityList(activities: List<HouseholdActivity>) {
     Column {
         LazyColumn(
-            modifier = Modifier.heightIn(max = 300.dp),
+            modifier = Modifier.heightIn(max = 400.dp),
         ) {
             items(activities.size) { index ->
                 val activity = activities[index]
@@ -230,7 +230,7 @@ fun ActivityList(activities: List<HouseholdActivity>) {
 
                 if (index < activities.size - 1) {
                     HorizontalDivider(
-                        modifier = Modifier.padding(horizontal = 16.dp),
+                        modifier = Modifier.padding(horizontal = 8.dp),
                         color = MaterialTheme.colorScheme.outline,
                         thickness = 1.dp,
                     )

@@ -16,6 +16,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -123,7 +124,7 @@ fun MainContent(
         NavHost(
             navController = navController,
             startDestination = "householdView",
-            modifier = Modifier.padding(innerPadding),
+            modifier = Modifier.padding(top = innerPadding.calculateTopPadding(), bottom = innerPadding.calculateBottomPadding() - 12.dp),
         ) {
             composable(route = "householdView") {
                 householdViewModel.updateSelectedHousehold(viewModel.selectedHousehold.firestoreId.toString())

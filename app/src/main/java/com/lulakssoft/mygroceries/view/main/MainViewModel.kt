@@ -14,6 +14,7 @@ import com.lulakssoft.mygroceries.database.product.DatabaseApp
 import com.lulakssoft.mygroceries.database.product.ProductRepository
 import com.lulakssoft.mygroceries.dataservice.FirestoreHouseholdRepository
 import com.lulakssoft.mygroceries.sync.HouseholdSyncService
+import com.lulakssoft.mygroceries.view.account.GoogleAuthUiClient
 import com.lulakssoft.mygroceries.view.account.UserData
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
@@ -111,6 +112,23 @@ class MainViewModel : ViewModel() {
                 isSyncing = false
             }
         }
+    }
+
+    private var onSignOutCallback: (() -> Unit)? = null
+
+    fun signOut(authClient: GoogleAuthUiClient) {
+        viewModelScope.launch {
+            try {
+                authClient.signOut()
+                onSignOutCallback?.invoke()
+            } catch (e: Exception) {
+                Log.e("HouseholdViewModel", "Error signing out", e)
+            }
+        }
+    }
+
+    fun setOnSignOutCallback(callback: () -> Unit) {
+        onSignOutCallback = callback
     }
 
     fun setCurrentUser(userData: UserData) {

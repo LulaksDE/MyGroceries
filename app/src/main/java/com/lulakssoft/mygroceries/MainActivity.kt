@@ -41,7 +41,10 @@ fun MyGroceriesApp() {
     val authViewModel = viewModel { AuthViewModel(authClient) }
     val authState by authViewModel.authState.collectAsState()
 
-    val mainViewModel = viewModel<MainViewModel>()
+    val mainViewModel =
+        viewModel<MainViewModel>().apply {
+            setOnSignOutCallback { authViewModel.resetState() }
+        }
     mainViewModel.initialize(DatabaseApp.getInstance(context))
 
     val onSignOut: () -> Unit = {

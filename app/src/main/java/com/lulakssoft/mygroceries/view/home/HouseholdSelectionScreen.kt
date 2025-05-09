@@ -1,6 +1,12 @@
 package com.lulakssoft.mygroceries.view.home
 
 import android.content.Context
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.MutableTransitionState
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -16,22 +22,30 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
@@ -44,15 +58,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.lulakssoft.mygroceries.R
 import com.lulakssoft.mygroceries.database.household.Household
 import com.lulakssoft.mygroceries.database.household.HouseholdRepository
 import com.lulakssoft.mygroceries.database.product.DatabaseApp
@@ -82,6 +96,7 @@ fun HouseholdSelectionScreen(
 
     val householdManagementViewModel =
         viewModel { HouseholdManagementViewModel(householdRepository) }
+
     val households by viewModel.households.collectAsState(initial = emptyList())
     val refreshing = viewModel.isSyncing
     val pullRefreshState = rememberPullToRefreshState()
@@ -92,6 +107,13 @@ fun HouseholdSelectionScreen(
     var newHouseholdName by remember { mutableStateOf("") }
     var invitationCode by remember { mutableStateOf("") }
 
+    val animationState =
+        remember {
+            MutableTransitionState(false).apply { targetState = true }
+        }
+
+    var showMenu by remember { mutableStateOf(false) }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -101,6 +123,34 @@ fun HouseholdSelectionScreen(
                         containerColor = MaterialTheme.colorScheme.primary,
                         titleContentColor = MaterialTheme.colorScheme.onPrimary,
                     ),
+                actions = {
+                    IconButton(onClick = { showMenu = true }) {
+                        Icon(
+                            imageVector = Icons.Default.MoreVert,
+                            contentDescription = "Menu",
+                            tint = MaterialTheme.colorScheme.onPrimary,
+                        )
+                    }
+                    DropdownMenu(
+                        expanded = showMenu,
+                        onDismissRequest = { showMenu = false },
+                        modifier = Modifier.background(MaterialTheme.colorScheme.surface),
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("Sign Out") },
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = Icons.Default.Close,
+                                    contentDescription = "Sign Out",
+                                )
+                            },
+                            onClick = {
+                                viewModel.signOut(authClient)
+                                showMenu = false
+                            },
+                        )
+                    }
+                },
             )
         },
     ) { padding ->
@@ -114,118 +164,271 @@ fun HouseholdSelectionScreen(
             state = pullRefreshState,
             isRefreshing = refreshing,
         ) {
-            if (households.isEmpty()) {
-                EmptyHouseholdsList()
-            } else {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    verticalArrangement = Arrangement.spacedBy(4.dp),
-                    contentPadding = PaddingValues(bottom = 80.dp),
-                ) {
-                    items(households) { household ->
-                        HouseholdItem(
-                            household = household,
-                            onClick = onHouseholdSelected,
-                        )
+            Box(modifier = Modifier.fillMaxSize()) {
+                if (households.isEmpty()) {
+                    EmptyHouseholdsList()
+                } else {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                        contentPadding =
+                            PaddingValues(
+                                top = 8.dp,
+                                bottom = 100.dp,
+                                start = 8.dp,
+                                end = 8.dp,
+                            ),
+                    ) {
+                        itemsIndexed(households) { index, household ->
+                            AnimatedVisibility(
+                                visibleState = animationState,
+                                enter =
+                                    fadeIn(
+                                        animationSpec =
+                                            spring(
+                                                dampingRatio = Spring.DampingRatioMediumBouncy,
+                                                stiffness = Spring.StiffnessLow,
+                                            ),
+                                    ) +
+                                        slideInVertically(
+                                            initialOffsetY = { it * (index + 1) / 5 },
+                                            animationSpec =
+                                                spring(
+                                                    dampingRatio = Spring.DampingRatioMediumBouncy,
+                                                    stiffness = Spring.StiffnessLow,
+                                                ),
+                                        ),
+                            ) {
+                                HouseholdItem(
+                                    household = household,
+                                    onClick = onHouseholdSelected,
+                                )
+                            }
+                        }
                     }
-                }
-            }
-            Row(
-                modifier = Modifier.fillMaxWidth().align(Alignment.BottomCenter).padding(16.dp),
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
-            ) {
-                Button(
-                    onClick = { showJoinHouseholdDialog = true },
-                    modifier = Modifier.weight(1f),
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.baseline_add_24),
-                        contentDescription = null,
-                        modifier = Modifier.size(16.dp),
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Join Household")
                 }
 
-                Button(
-                    onClick = { showCreateHouseholdDialog = true },
-                    modifier = Modifier.weight(1f),
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.baseline_add_24),
-                        contentDescription = null,
-                        modifier = Modifier.size(16.dp),
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Create Household")
-                }
+                ActionButtons(
+                    onCreateClick = { showCreateHouseholdDialog = true },
+                    onJoinClick = { showJoinHouseholdDialog = true },
+                    modifier = Modifier.align(Alignment.BottomCenter),
+                )
             }
         }
-        // Create Household Dialog
+
         if (showCreateHouseholdDialog) {
-            AlertDialog(
-                onDismissRequest = { showCreateHouseholdDialog = false },
-                title = { Text("Create New Household") },
-                text = {
-                    TextField(
-                        value = newHouseholdName,
-                        onValueChange = { newHouseholdName = it },
-                        label = { Text("Household Name") },
-                        modifier = Modifier.fillMaxWidth(),
-                    )
+            CreateHouseholdDialog(
+                householdName = newHouseholdName,
+                onNameChange = { newHouseholdName = it },
+                onConfirm = {
+                    viewModel.householdText = newHouseholdName
+                    viewModel.insert()
+                    showCreateHouseholdDialog = false
+                    newHouseholdName = ""
                 },
-                confirmButton = {
-                    Button(
-                        onClick = {
-                            viewModel.householdText = newHouseholdName
-                            viewModel.insert()
-                            showCreateHouseholdDialog = false
-                            newHouseholdName = ""
-                        },
-                    ) {
-                        Text("Create")
-                    }
-                },
-                dismissButton = {
-                    TextButton(onClick = { showCreateHouseholdDialog = false }) {
-                        Text("Cancel")
-                    }
+                onDismiss = {
+                    showCreateHouseholdDialog = false
+                    newHouseholdName = ""
                 },
             )
         }
 
-        // Join Household Dialog and wait if join is successful
         if (showJoinHouseholdDialog) {
-            AlertDialog(
-                onDismissRequest = { showJoinHouseholdDialog = false },
-                title = { Text("Join Household") },
-                text = {
-                    TextField(
-                        value = invitationCode,
-                        onValueChange = { invitationCode = it },
-                        label = { Text("Invitation Code") },
-                        modifier = Modifier.fillMaxWidth(),
-                    )
+            JoinHouseholdDialog(
+                invitationCode = invitationCode,
+                onCodeChange = { invitationCode = it },
+                onConfirm = {
+                    householdManagementViewModel.joinHouseholdByCode(invitationCode)
+                    showJoinHouseholdDialog = false
+                    invitationCode = ""
                 },
-                confirmButton = {
-                    Button(
-                        onClick = {
-                            householdManagementViewModel.joinHouseholdByCode(invitationCode)
-                            showJoinHouseholdDialog = false
-                            invitationCode = ""
-                        },
-                    ) {
-                        Text("Join")
-                    }
-                },
-                dismissButton = {
-                    TextButton(onClick = { showJoinHouseholdDialog = false }) {
-                        Text("Cancel")
-                    }
+                onDismiss = {
+                    showJoinHouseholdDialog = false
+                    invitationCode = ""
                 },
             )
         }
     }
+}
+
+@Composable
+private fun ActionButtons(
+    onCreateClick: () -> Unit,
+    onJoinClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+                .shadow(
+                    elevation = 8.dp,
+                    shape = RoundedCornerShape(16.dp),
+                    clip = false,
+                ).clip(RoundedCornerShape(16.dp))
+                .background(MaterialTheme.colorScheme.surface)
+                .padding(16.dp),
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
+        Button(
+            onClick = onJoinClick,
+            modifier = Modifier.weight(1f),
+            colors =
+                ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                ),
+            shape = RoundedCornerShape(12.dp),
+        ) {
+            Icon(
+                imageVector = Icons.Default.Person,
+                contentDescription = "Join Household",
+                modifier = Modifier.size(18.dp),
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text("Join Household")
+        }
+
+        Button(
+            onClick = onCreateClick,
+            modifier = Modifier.weight(1f),
+            colors =
+                ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                ),
+            shape = RoundedCornerShape(12.dp),
+        ) {
+            Icon(
+                imageVector = Icons.Default.Add,
+                contentDescription = "Create Household",
+                modifier = Modifier.size(18.dp),
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text("Create Household")
+        }
+    }
+}
+
+@Composable
+private fun CreateHouseholdDialog(
+    householdName: String,
+    onNameChange: (String) -> Unit,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                "Create New Household",
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold,
+            )
+        },
+        text = {
+            Column(
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp),
+            ) {
+                Text(
+                    "Enter a name for your new household.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                OutlinedTextField(
+                    value = householdName,
+                    onValueChange = onNameChange,
+                    label = { Text("Household Name") },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    singleLine = true,
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = onConfirm,
+                enabled = householdName.isNotBlank(),
+                colors =
+                    ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                    ),
+            ) {
+                Text("Create")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        },
+        shape = RoundedCornerShape(16.dp),
+    )
+}
+
+@Composable
+private fun JoinHouseholdDialog(
+    invitationCode: String,
+    onCodeChange: (String) -> Unit,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                "Join Household",
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold,
+            )
+        },
+        text = {
+            Column(
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp),
+            ) {
+                Text(
+                    "Enter the invitation code you received.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                OutlinedTextField(
+                    value = invitationCode,
+                    onValueChange = onCodeChange,
+                    label = { Text("Invitation Code") },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    singleLine = true,
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = onConfirm,
+                enabled = invitationCode.isNotBlank(),
+                colors =
+                    ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                    ),
+            ) {
+                Text("Join")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        },
+        shape = RoundedCornerShape(16.dp),
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -294,7 +497,7 @@ private fun HouseholdItem(
         modifier =
             Modifier
                 .fillMaxWidth()
-                .padding(vertical = 8.dp, horizontal = 8.dp)
+                .padding(bottom = 4.dp, top = 0.dp, start = 8.dp, end = 8.dp)
                 .height(110.dp)
                 .clickable(enabled = true) { onClick(household) },
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),

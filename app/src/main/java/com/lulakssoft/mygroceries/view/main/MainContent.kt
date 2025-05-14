@@ -29,6 +29,8 @@ import com.lulakssoft.mygroceries.view.home.HouseholdView
 import com.lulakssoft.mygroceries.view.home.HouseholdViewModel
 import com.lulakssoft.mygroceries.view.management.HouseholdManagementView
 import com.lulakssoft.mygroceries.view.management.HouseholdManagementViewModel
+import com.lulakssoft.mygroceries.view.products.ProductsCreationView
+import com.lulakssoft.mygroceries.view.products.ProductsCreationViewModel
 import com.lulakssoft.mygroceries.view.products.ProductsView
 import com.lulakssoft.mygroceries.view.products.ProductsViewModel
 import com.lulakssoft.mygroceries.view.scanner.ScannerView
@@ -55,6 +57,8 @@ fun MainContent(
             }
         }
     val productsViewModel = remember { ProductsViewModel(viewModel.productRepository) }
+    val productsCreationViewModel =
+        remember { ProductsCreationViewModel(viewModel.productRepository, viewModel.currentUser?.userId.toString()) }
     val scannerViewModel =
         remember {
             ScannerViewModel(viewModel.productRepository).apply {
@@ -140,7 +144,9 @@ fun MainContent(
             }
             composable(route = "productsView") {
                 productsViewModel.updateSelectedHousehold(viewModel.selectedHousehold)
-                ProductsView(productsViewModel, onSyncProducts, syncing)
+                ProductsView(productsViewModel, onSyncProducts, onNavigateToCreation = {
+                    navController.navigate("productsCreation")
+                }, syncing)
             }
             composable(route = "scannerView") {
                 ScannerView(scannerViewModel)
@@ -154,6 +160,14 @@ fun MainContent(
                         }
                     }
                 HouseholdManagementView(managementViewModel)
+            }
+            composable(route = "productsCreation") {
+                productsCreationViewModel.setCurrentHousehold(viewModel.selectedHousehold)
+                ProductsCreationView(productsCreationViewModel) {
+                    navController.navigate("productsView") {
+                        popUpTo("productsCreation") { inclusive = true }
+                    }
+                }
             }
         }
     }

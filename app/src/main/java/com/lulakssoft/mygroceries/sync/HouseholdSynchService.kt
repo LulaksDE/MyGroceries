@@ -114,11 +114,17 @@ class HouseholdSyncService(
                 localProductRepository.deleteProduct(product)
             }
             for (remoteProduct in remoteProducts) {
-                val productImage = dataService.getProductImage(remoteProduct.imageUrl)
-                val bitmap = BitmapFactory.decodeByteArray(productImage, 0, productImage.size)
-                val imageBitmap = bitmap.asImageBitmap()
-                val product = convertToLocalProduct(remoteProduct, localHouseholdId, firestoreId, imageBitmap)
-                localProductRepository.insertOrUpdateProduct(product)
+                if (remoteProduct.imageUrl.isNotEmpty()) {
+                    val productImage = dataService.getProductImage(remoteProduct.imageUrl)
+                    val bitmap = BitmapFactory.decodeByteArray(productImage, 0, productImage.size)
+                    val imageBitmap = bitmap.asImageBitmap()
+                    val product = convertToLocalProduct(remoteProduct, localHouseholdId, firestoreId, imageBitmap)
+                    localProductRepository.insertOrUpdateProduct(product)
+                } else {
+                    Log.d(TAG, "No image URL for product: ${remoteProduct.productName}")
+                    val product = convertToLocalProduct(remoteProduct, localHouseholdId, firestoreId, ImageBitmap(1, 1))
+                    localProductRepository.insertOrUpdateProduct(product)
+                }
             }
         } catch (e: Exception) {
             Log.e(TAG, "Error syncing household products", e)

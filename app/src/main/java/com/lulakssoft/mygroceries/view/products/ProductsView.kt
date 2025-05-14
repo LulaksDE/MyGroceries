@@ -26,6 +26,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DateRange
@@ -34,6 +35,7 @@ import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -67,6 +69,7 @@ import java.time.temporal.ChronoUnit
 fun ProductsView(
     viewModel: ProductsViewModel,
     onSyncProducts: () -> Unit,
+    onNavigateToCreation: () -> Unit,
     syncing: Boolean,
 ) {
     var searchQuery by remember { mutableStateOf("") }
@@ -125,7 +128,7 @@ fun ProductsView(
                         modifier =
                             Modifier
                                 .fillMaxWidth()
-                                .padding(16.dp),
+                                .padding(8.dp),
                         placeholder = { Text("Search products...") },
                         leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
                         trailingIcon = {
@@ -139,7 +142,7 @@ fun ProductsView(
                             }
                         },
                         singleLine = true,
-                        shape = RoundedCornerShape(24.dp),
+                        shape = RoundedCornerShape(12.dp),
                     )
 
                     Row(
@@ -185,6 +188,20 @@ fun ProductsView(
                     }
 
                     HorizontalDivider()
+                }
+            }
+        },
+        floatingActionButton = {
+            if (!selectionMode) {
+                FloatingActionButton(
+                    onClick = onNavigateToCreation,
+                    containerColor = MaterialTheme.colorScheme.primary,
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = "Add product",
+                        tint = MaterialTheme.colorScheme.onPrimary,
+                    )
                 }
             }
         },
@@ -354,7 +371,7 @@ fun ProductGridItem(
                         contentDescription = "Not synced",
                         modifier =
                             Modifier
-                                .size(product.productImage.width.dp)
+                                .size(64.dp)
                                 .align(Alignment.Center),
                         tint = MaterialTheme.colorScheme.primary,
                     )
@@ -519,7 +536,7 @@ fun ProductListItem(
                         contentDescription = "Not synced",
                         modifier =
                             Modifier
-                                .size(product.productImage.width.dp)
+                                .size(64.dp)
                                 .align(Alignment.Center),
                         tint = MaterialTheme.colorScheme.primary,
                     )

@@ -62,8 +62,6 @@ fun HouseholdView(
                         contentDescription = "Haushalt verwalten",
                     )
                 }
-            } else {
-                Text("(You have the role ${currentMember?.role})")
             }
         },
     ) { padding ->
@@ -300,10 +298,10 @@ fun formatTimestamp(timestamp: LocalDateTime): String {
 
     return when {
         timestamp.toLocalDate() == now.toLocalDate() -> {
-            "Heute, ${timestamp.format(DateTimeFormatter.ofPattern("HH:mm"))}"
+            "Today, ${timestamp.format(DateTimeFormatter.ofPattern("HH:mm"))}"
         }
         timestamp.toLocalDate() == now.toLocalDate().minusDays(1) -> {
-            "Gestern, ${timestamp.format(DateTimeFormatter.ofPattern("HH:mm"))}"
+            "Yesterday, ${timestamp.format(DateTimeFormatter.ofPattern("HH:mm"))}"
         }
         else -> {
             timestamp.format(formatter)

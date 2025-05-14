@@ -213,7 +213,24 @@ class HouseholdRepository(
 
     fun getHouseholdMembers(firestoreId: String) = memberDao.getMembersForHousehold(firestoreId)
 
-    suspend fun removeMemberFromHousehold(member: HouseholdMember) = memberDao.removeMember(member)
+    suspend fun removeMemberFromHousehold(member: HouseholdMember) {
+        try {
+            memberDao.removeMember(member)
+
+            val currentUser = FirebaseAuth.getInstance().currentUser
+            val currentUserId = currentUser?.uid ?: return
+            val currentUserName = currentUser.displayName ?: "unknown user"
+
+            firestoreManager.removeMemberFromHousehold(
+                member.firestoreId,
+                member.userId,
+                currentUserId,
+                currentUserName,
+            )
+        } catch (e: Exception) {
+            Log.e("HouseholdRepository", "Error while removing member: ${e.message}")
+        }
+    }
 
     suspend fun updateMemberRole(
         memberId: Int,

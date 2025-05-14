@@ -244,6 +244,49 @@ class FirestoreManager {
         }
     }
 
+    suspend fun removeMemberFromHousehold(
+        firestoreId: String,
+        userId: String,
+        removerUserId: String,
+        removerUserName: String,
+    ) {
+        try {
+            val memberDoc =
+                firestore
+                    .collection("households")
+                    .document(firestoreId)
+                    .collection("members")
+                    .document(userId)
+                    .get()
+                    .await()
+
+            val memberName = memberDoc.getString("userName") ?: "unknown user"
+
+            memberDoc.reference.delete().await()
+
+            firestore
+                .collection("users")
+                .document(userId)
+                .collection("memberships")
+                .document(firestoreId)
+                .delete()
+                .await()
+
+            logActivity(
+                firestoreId,
+                removerUserId,
+                removerUserName,
+                ActivityType.MEMBER_REMOVED,
+                "Member removed: $memberName",
+            )
+
+            Log.d(TAG, "Member removed in Firestore: $memberName")
+        } catch (e: Exception) {
+            Log.e(TAG, "Error while removing member in Firestore", e)
+            throw e
+        }
+    }
+
     suspend fun logActivity(
         firestoreId: String,
         userId: String,

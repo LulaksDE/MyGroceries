@@ -29,7 +29,6 @@ import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DateRange
-import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.Card
@@ -419,7 +418,7 @@ fun ProductGridItem(
                 modifier = Modifier.fillMaxHeight().align(Alignment.End),
             ) {
                 Text(
-                    text = "MHD: $daysUntilExpiration days",
+                    text = "BBD: $daysUntilExpiration days",
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onError,
                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
@@ -432,7 +431,7 @@ fun ProductGridItem(
                 modifier = Modifier.fillMaxHeight().align(Alignment.End),
             ) {
                 Text(
-                    text = "MHD: $daysUntilExpiration days",
+                    text = "BBD: $daysUntilExpiration days",
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
@@ -547,7 +546,7 @@ fun ProductListItem(
                 Spacer(modifier = Modifier.height(4.dp))
 
                 val daysUntilExpiration = product.calculateDaysUntilExpiration()
-                val mhdColor =
+                val bbdColor =
                     when {
                         daysUntilExpiration < 3 -> MaterialTheme.colorScheme.error
                         daysUntilExpiration < 7 -> MaterialTheme.colorScheme.tertiary
@@ -561,13 +560,13 @@ fun ProductListItem(
                         imageVector = Icons.Default.DateRange,
                         contentDescription = null,
                         modifier = Modifier.size(16.dp),
-                        tint = mhdColor,
+                        tint = bbdColor,
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = "MHD: ${product.productBestBeforeDate}",
+                        text = "BBD: ${product.productBestBeforeDate}",
                         style = MaterialTheme.typography.bodySmall,
-                        color = mhdColor,
+                        color = bbdColor,
                     )
                 }
             }

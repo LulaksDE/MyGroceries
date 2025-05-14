@@ -1,8 +1,6 @@
 package com.lulakssoft.mygroceries.view.main
 
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -16,12 +14,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.lulakssoft.mygroceries.R
 import com.lulakssoft.mygroceries.database.household.HouseholdRepository
 import com.lulakssoft.mygroceries.database.product.DatabaseApp
 import com.lulakssoft.mygroceries.view.account.GoogleAuthUiClient
@@ -87,7 +87,7 @@ fun MainContent(
                 actions = {
                     IconButton(onClick = onOpenHouseholdSelection) {
                         Icon(
-                            imageVector = Icons.Default.Menu,
+                            painter = painterResource(id = R.drawable.ic_household),
                             contentDescription = "Change Household",
                             tint = MaterialTheme.colorScheme.onPrimary,
                         )

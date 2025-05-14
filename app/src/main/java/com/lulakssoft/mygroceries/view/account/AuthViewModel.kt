@@ -25,6 +25,7 @@ class AuthViewModel(
     private val _authState = MutableStateFlow<AuthState>(AuthState.Idle)
     val authState = _authState.asStateFlow()
     var loading: Boolean by mutableStateOf(false)
+    var errorMessage: String by mutableStateOf("")
 
     private val auth = Firebase.auth
 
@@ -47,10 +48,10 @@ class AuthViewModel(
                             ),
                         )
                 } ?: run {
-                    _authState.value = AuthState.Error("Anonyme Anmeldung fehlgeschlagen")
+                    _authState.value = AuthState.Error("Anonymous sign-in failed")
                 }
             } catch (e: Exception) {
-                _authState.value = AuthState.Error("Fehler: ${e.message}")
+                _authState.value = AuthState.Error("Error: ${e.message}")
             }
         }
 
@@ -79,6 +80,8 @@ class AuthViewModel(
     ) {
         viewModelScope.launch {
             try {
+                loading = true
+                errorMessage = ""
                 val firestoreRepo = FirestoreHouseholdRepository(context)
                 val localHouseholdRepo =
                     HouseholdRepository(
@@ -96,6 +99,9 @@ class AuthViewModel(
                 syncService.syncUserHouseholds(userData.userId)
             } catch (e: Exception) {
                 Log.e("AuthViewModel", "Error during sync after login", e)
+                errorMessage = "Error during initial sync: ${e.message}"
+            } finally {
+                loading = false
             }
         }
     }

@@ -1,3 +1,5 @@
+import com.android.build.gradle.internal.cxx.configure.gradleLocalProperties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
@@ -6,7 +8,6 @@ plugins {
     alias(libs.plugins.google.gms.google.services)
     alias(libs.plugins.compose.compiler)
 }
-
 android {
     namespace = "com.lulakssoft.mygroceries"
     compileSdk = 35
@@ -24,8 +25,20 @@ android {
         }
     }
 
+    val localProperties = gradleLocalProperties(rootDir, providers)
+
+    signingConfigs {
+        create("release") {
+            storeFile = file("keystore/mygroceries.jks")
+            storePassword = localProperties.getProperty("keystore.password", "")
+            keyAlias = localProperties.getProperty("keystore.alias", "")
+            keyPassword = localProperties.getProperty("keystore.key.password", "")
+        }
+    }
+
     buildTypes {
         release {
+            signingConfig = signingConfigs.getByName("release")
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),

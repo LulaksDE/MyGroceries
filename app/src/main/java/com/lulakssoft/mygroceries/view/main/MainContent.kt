@@ -1,5 +1,8 @@
 package com.lulakssoft.mygroceries.view.main
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -103,29 +106,38 @@ fun MainContent(
             )
         },
         bottomBar = {
-            BottomBar(
-                currentView =
-                    when (currentRoute) {
-                        "householdView" -> BottomBarNavigationView.Household
-                        "productsView" -> BottomBarNavigationView.Products
-                        "scannerView" -> BottomBarNavigationView.Scanner
-                        else -> BottomBarNavigationView.Household
+            AnimatedVisibility(
+                visible = currentRoute != "householdManagement" && currentRoute != "productsCreation",
+                enter = slideInVertically(initialOffsetY = { it }),
+                exit = slideOutVertically(targetOffsetY = { it }),
+            ) {
+                BottomBar(
+                    currentView =
+                        when (currentRoute) {
+                            "householdView" -> BottomBarNavigationView.Household
+                            "productsView" -> BottomBarNavigationView.Products
+                            "scannerView" -> BottomBarNavigationView.Scanner
+                            else -> BottomBarNavigationView.Household
+                        },
+                    onNavigate = { view ->
+                        val targetRoute =
+                            when (view) {
+                                BottomBarNavigationView.Household -> "householdView"
+                                BottomBarNavigationView.Products -> "productsView"
+                                BottomBarNavigationView.Scanner -> "scannerView"
+                            }
+                        if (currentRoute != targetRoute) {
+                            navController.navigate(targetRoute) {
+                                popUpTo(navController.graph.startDestinationId) {
+                                    saveState = true
+                                }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        }
                     },
-                onNavigate = { view ->
-                    val targetRoute =
-                        when (view) {
-                            BottomBarNavigationView.Household -> "householdView"
-                            BottomBarNavigationView.Products -> "productsView"
-                            BottomBarNavigationView.Scanner -> "scannerView"
-                        }
-                    if (currentRoute != targetRoute) {
-                        navController.navigate(targetRoute) {
-                            popUpTo(navController.graph.startDestinationId)
-                            launchSingleTop = true
-                        }
-                    }
-                },
-            )
+                )
+            }
         },
     ) { innerPadding ->
         NavHost(
@@ -141,14 +153,26 @@ fun MainContent(
                 HouseholdView(
                     householdViewModel,
                     navigateToManagement = {
-                        navController.navigate("householdManagement")
+                        navController.navigate("householdManagement") {
+                            popUpTo(navController.graph.startDestinationId) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
                     },
                 )
             }
             composable(route = "productsView") {
                 productsViewModel.updateSelectedHousehold(viewModel.selectedHousehold)
                 ProductsView(productsViewModel, onSyncProducts, onNavigateToCreation = {
-                    navController.navigate("productsCreation")
+                    navController.navigate("productsCreation") {
+                        popUpTo(navController.graph.startDestinationId) {
+                            saveState = true
+                        }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
                 }, syncing)
             }
             composable(route = "scannerView") {

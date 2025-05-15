@@ -1,6 +1,5 @@
 package com.lulakssoft.mygroceries.view.scanner
 
-import android.app.DatePickerDialog
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.icu.util.Calendar
@@ -35,16 +34,23 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.DisplayMode
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -294,6 +300,7 @@ fun ScanIndicator() {
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EnhancedProductInfoDialog(viewModel: ScannerViewModel) {
     val initialCalendar =
@@ -304,6 +311,16 @@ fun EnhancedProductInfoDialog(viewModel: ScannerViewModel) {
         }
     var selectedDate by remember { mutableStateOf(initialCalendar) }
     val context = LocalContext.current
+
+    // Date picker state und Dialog-Steuerung
+    val datePickerState =
+        rememberDatePickerState(
+            initialSelectedDateMillis = initialCalendar.timeInMillis,
+            initialDisplayMode = DisplayMode.Picker,
+        )
+    var showDatePicker by remember { mutableStateOf(false) }
+
+    var productAmountSlider by remember { mutableFloatStateOf(1f) }
 
     AlertDialog(
         onDismissRequest = {
@@ -362,6 +379,23 @@ fun EnhancedProductInfoDialog(viewModel: ScannerViewModel) {
                         }
                     }
 
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        "Quantity ${viewModel.productQuantity}",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Medium,
+                    )
+                    Slider(
+                        value = productAmountSlider,
+                        onValueChange = { newValue ->
+                            productAmountSlider = newValue
+                            viewModel.productQuantity = newValue.toInt()
+                        },
+                        valueRange = 1f..100f,
+                        steps = 99,
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                    )
+
                     Spacer(modifier = Modifier.height(16.dp))
 
                     Text(
@@ -370,7 +404,37 @@ fun EnhancedProductInfoDialog(viewModel: ScannerViewModel) {
                         fontWeight = FontWeight.Medium,
                     )
 
-                    Spacer(modifier = Modifier.height(8.dp))
+                    if (showDatePicker) {
+                        DatePickerDialog(
+                            onDismissRequest = { showDatePicker = false },
+                            confirmButton = {
+                                TextButton(onClick = {
+                                    showDatePicker = false
+                                    datePickerState.selectedDateMillis?.let { millis ->
+                                        val date =
+                                            Calendar.getInstance().apply {
+                                                timeInMillis = millis
+                                            }
+                                        selectedDate = date
+                                        viewModel.productBestBefore = date.toLocalDate()
+                                    }
+                                }) {
+                                    Text("Confirm")
+                                }
+                            },
+                            dismissButton = {
+                                TextButton(onClick = { showDatePicker = false }) {
+                                    Text("Cancle")
+                                }
+                            },
+                        ) {
+                            DatePicker(
+                                modifier = Modifier.fillMaxWidth().padding(16.dp),
+                                state = datePickerState,
+                                showModeToggle = true,
+                            )
+                        }
+                    }
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -394,24 +458,7 @@ fun EnhancedProductInfoDialog(viewModel: ScannerViewModel) {
                         }
 
                         IconButton(
-                            onClick = {
-                                val datePickerDialog =
-                                    DatePickerDialog(
-                                        context,
-                                        { _, selectedYear, selectedMonth, selectedDay ->
-                                            val newDate =
-                                                Calendar.getInstance().apply {
-                                                    set(selectedYear, selectedMonth, selectedDay)
-                                                }
-                                            viewModel.productBestBefore = newDate.toLocalDate()
-                                            selectedDate = newDate
-                                        },
-                                        selectedDate.get(Calendar.YEAR),
-                                        selectedDate.get(Calendar.MONTH),
-                                        selectedDate.get(Calendar.DAY_OF_MONTH),
-                                    )
-                                datePickerDialog.show()
-                            },
+                            onClick = { showDatePicker = true },
                         ) {
                             Icon(
                                 imageVector = Icons.Default.DateRange,
@@ -428,7 +475,7 @@ fun EnhancedProductInfoDialog(viewModel: ScannerViewModel) {
                     viewModel.insert()
                     viewModel.scannedSomething = false
                     viewModel.scannedCode = ""
-                    viewModel.product = ProductDto("", ProductInfo("", "", ""))
+                    viewModel.product = ProductDto("", ProductInfo("", "", "", ""))
                     viewModel.productImage = ImageBitmap(1, 1)
                 },
                 enabled = !viewModel.loading,
@@ -442,7 +489,7 @@ fun EnhancedProductInfoDialog(viewModel: ScannerViewModel) {
                 onClick = {
                     viewModel.scannedSomething = false
                     viewModel.scannedCode = ""
-                    viewModel.product = ProductDto("", ProductInfo("", "", ""))
+                    viewModel.product = ProductDto("", ProductInfo("", "", "", ""))
                     viewModel.productImage = ImageBitmap(1, 1)
                 },
             ) {

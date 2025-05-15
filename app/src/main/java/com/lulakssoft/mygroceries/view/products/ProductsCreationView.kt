@@ -1,6 +1,5 @@
 package com.lulakssoft.mygroceries.view.products
 
-import android.app.DatePickerDialog
 import android.content.Context
 import android.graphics.BitmapFactory
 import android.icu.util.Calendar
@@ -29,6 +28,9 @@ import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.DisplayMode
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -37,6 +39,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -56,6 +60,7 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.scale
 import com.lulakssoft.mygroceries.R
+import com.lulakssoft.mygroceries.view.scanner.toLocalDate
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
@@ -166,16 +171,15 @@ fun ProductCreationForm(
         Slider(
             value = productQuantitySlider,
             onValueChange = { productQuantitySlider = it },
-            valueRange = 1f..20f,
-            steps = 19,
-            modifier = Modifier.fillMaxWidth(),
+            valueRange = 1f..100f,
+            steps = 99,
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
         )
 
         // Best Before Date
         DateSelector(
             selectedDate = productBestBeforeDate,
             onDateSelected = { productBestBeforeDate = it },
-            context = context,
         )
 
         Spacer(modifier = Modifier.height(24.dp))
@@ -195,7 +199,7 @@ fun ProductCreationForm(
             enabled = isFormValid,
             modifier = Modifier.fillMaxWidth(),
         ) {
-            Text("SAVE PRODUCT")
+            Text("Save Product")
         }
     }
 }
@@ -266,13 +270,25 @@ fun ImageSelectionCard(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DateSelector(
     selectedDate: LocalDate,
     onDateSelected: (LocalDate) -> Unit,
-    context: Context,
 ) {
+    val initialCalendar =
+        remember {
+            Calendar.getInstance().apply {
+                add(Calendar.DAY_OF_YEAR, 7)
+            }
+        }
     val formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy")
+    val datePickerState =
+        rememberDatePickerState(
+            initialSelectedDateMillis = initialCalendar.timeInMillis,
+            initialDisplayMode = DisplayMode.Picker,
+        )
+    var showDatePicker by remember { mutableStateOf(false) }
 
     Card(
         colors =
@@ -303,26 +319,42 @@ fun DateSelector(
                 )
             }
 
+            if (showDatePicker) {
+                DatePickerDialog(
+                    onDismissRequest = { showDatePicker = false },
+                    confirmButton = {
+                        TextButton(onClick = {
+                            showDatePicker = false
+                            datePickerState.selectedDateMillis?.let { millis ->
+                                val date =
+                                    Calendar.getInstance().apply {
+                                        timeInMillis = millis
+                                    }
+                                onDateSelected(date.toLocalDate())
+                            }
+                        }) {
+                            Text("Confirm")
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { showDatePicker = false }) {
+                            Text("Cancle")
+                        }
+                    },
+                ) {
+                    DatePicker(
+                        modifier = Modifier.fillMaxWidth().padding(16.dp),
+                        state = datePickerState,
+                        showModeToggle = true,
+                    )
+                }
+            }
             IconButton(
-                onClick = {
-                    val calendar = Calendar.getInstance()
-                    calendar.set(selectedDate.year, selectedDate.monthValue - 1, selectedDate.dayOfMonth)
-
-                    DatePickerDialog(
-                        context,
-                        { _, year, month, dayOfMonth ->
-                            onDateSelected(LocalDate.of(year, month + 1, dayOfMonth))
-                        },
-                        calendar.get(Calendar.YEAR),
-                        calendar.get(Calendar.MONTH),
-                        calendar.get(Calendar.DAY_OF_MONTH),
-                    ).show()
-                },
+                onClick = { showDatePicker = true },
             ) {
                 Icon(
                     imageVector = Icons.Default.DateRange,
-                    contentDescription = "Select date",
-                    tint = MaterialTheme.colorScheme.primary,
+                    contentDescription = "Date Picker",
                 )
             }
         }

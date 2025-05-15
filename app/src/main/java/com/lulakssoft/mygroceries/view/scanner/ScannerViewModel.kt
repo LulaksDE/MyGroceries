@@ -31,7 +31,7 @@ class ScannerViewModel(
     var scannedSomething: Boolean by mutableStateOf(false)
     var scannedCode: String by mutableStateOf("")
 
-    var product: ProductDto by mutableStateOf(ProductDto("", ProductInfo("", "", "")))
+    var product: ProductDto by mutableStateOf(ProductDto("", ProductInfo("", "", "", "")))
     var productImage: ImageBitmap by mutableStateOf(ImageBitmap(1, 1))
     var productBestBefore by mutableStateOf(LocalDate.now())
     var productEntryDate by mutableStateOf(LocalDateTime.now())
@@ -54,7 +54,7 @@ class ScannerViewModel(
             errorMessage = ""
             loading = true
             productImage = ImageBitmap(1, 1)
-            product = ProductDto("", ProductInfo("", "", ""))
+            product = ProductDto("", ProductInfo("", "", "", ""))
 
             try {
                 val foundProduct = dataService.getProductDataFromBarCode(barcode)

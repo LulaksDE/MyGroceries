@@ -14,8 +14,10 @@ class ProductsViewModel(
     private val repository: ProductRepository,
 ) : ViewModel() {
     var productList by mutableStateOf<List<Product>>(emptyList())
+    var selectedHousehold by mutableStateOf(Household(0, "", ""))
 
     fun updateSelectedHousehold(household: Household) {
+        selectedHousehold = household
         if (household.firestoreId.toString().isNotEmpty()) {
             getProductForHousehold(household.firestoreId.toString())
         } else {
@@ -28,6 +30,8 @@ class ProductsViewModel(
             productList = repository.getProductsByFirestoreId(firestoreId)
         }
     }
+
+    fun getProductById(productId: String): Product? = productList.find { it.productUuid == productId }
 
     private fun deleteProduct(product: Product) {
         viewModelScope.launch {

@@ -38,6 +38,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDatePickerState
@@ -174,6 +175,12 @@ fun ProductCreationForm(
             valueRange = 1f..100f,
             steps = 99,
             modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+            colors =
+                SliderDefaults.colors(
+                    thumbColor = MaterialTheme.colorScheme.primary,
+                    activeTickColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.0f),
+                    inactiveTickColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.0f),
+                ),
         )
 
         // Best Before Date

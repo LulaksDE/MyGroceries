@@ -70,6 +70,7 @@ fun ProductsView(
     viewModel: ProductsViewModel,
     onSyncProducts: () -> Unit,
     onNavigateToCreation: () -> Unit,
+    onNavigateToDetails: (String) -> Unit,
     syncing: Boolean,
 ) {
     var searchQuery by remember { mutableStateOf("") }
@@ -271,6 +272,11 @@ fun ProductsView(
                                         selectedProducts = setOf(product)
                                     }
                                 },
+                                onProductClick = { productUuid ->
+                                    if (!selectionMode) {
+                                        onNavigateToDetails(productUuid)
+                                    }
+                                },
                             )
                         }
                     }
@@ -301,6 +307,11 @@ fun ProductsView(
                                         selectedProducts = setOf(product)
                                     }
                                 },
+                                onProductClick = { productUuid ->
+                                    if (!selectionMode) {
+                                        onNavigateToDetails(productUuid)
+                                    }
+                                },
                             )
                         }
                     }
@@ -318,15 +329,22 @@ fun ProductGridItem(
     selectionMode: Boolean,
     onSelect: () -> Unit,
     onLongPress: () -> Unit,
+    onProductClick: (String) -> Unit,
 ) {
     Card(
         modifier =
             Modifier
                 .fillMaxWidth()
                 .aspectRatio(0.9f)
-                .padding(4.dp)
+                .padding(vertical = 4.dp, horizontal = 2.dp)
                 .combinedClickable(
-                    onClick = { onSelect() },
+                    onClick = {
+                        if (selectionMode) {
+                            onSelect()
+                        } else {
+                            onProductClick(product.productUuid)
+                        }
+                    },
                     onLongClick = { onLongPress() },
                 ),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
@@ -337,7 +355,7 @@ fun ProductGridItem(
                 modifier =
                     Modifier
                         .fillMaxWidth()
-                        .height(100.dp)
+                        .height(80.dp)
                         .background(MaterialTheme.colorScheme.surfaceVariant),
             ) {
                 if (product.productImage.width < 4 || product.productImage.height < 4) {
@@ -485,11 +503,18 @@ fun ProductListItem(
     selectionMode: Boolean,
     onSelect: () -> Unit,
     onLongPress: () -> Unit,
+    onProductClick: (String) -> Unit,
 ) {
     Card(
         modifier =
             Modifier.fillMaxWidth().combinedClickable(
-                onClick = { onSelect() },
+                onClick = {
+                    if (!selectionMode) {
+                        onProductClick(product.productUuid)
+                    } else {
+                        onSelect()
+                    }
+                },
                 onLongClick = { onLongPress() },
             ),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),

@@ -43,6 +43,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDatePickerState
@@ -120,7 +121,7 @@ fun EnhancedProductViewWithScanner(onQrCodeScanned: (String) -> Unit) {
     if (hasCameraPermission) {
         Column(
             modifier = Modifier.fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
+            horizontalAlignment = CenterHorizontally,
         ) {
             Text(
                 text = "Scan barcode",
@@ -310,9 +311,7 @@ fun EnhancedProductInfoDialog(viewModel: ScannerViewModel) {
             }
         }
     var selectedDate by remember { mutableStateOf(initialCalendar) }
-    val context = LocalContext.current
 
-    // Date picker state und Dialog-Steuerung
     val datePickerState =
         rememberDatePickerState(
             initialSelectedDateMillis = initialCalendar.timeInMillis,
@@ -394,6 +393,12 @@ fun EnhancedProductInfoDialog(viewModel: ScannerViewModel) {
                         valueRange = 1f..100f,
                         steps = 99,
                         modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                        colors =
+                            SliderDefaults.colors(
+                                thumbColor = MaterialTheme.colorScheme.primary,
+                                activeTickColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.0f),
+                                inactiveTickColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.0f),
+                            ),
                     )
 
                     Spacer(modifier = Modifier.height(16.dp))

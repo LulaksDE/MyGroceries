@@ -22,10 +22,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.lulakssoft.mygroceries.R
 import com.lulakssoft.mygroceries.database.household.HouseholdRepository
 import com.lulakssoft.mygroceries.database.product.DatabaseApp
@@ -34,6 +36,7 @@ import com.lulakssoft.mygroceries.view.home.HouseholdView
 import com.lulakssoft.mygroceries.view.home.HouseholdViewModel
 import com.lulakssoft.mygroceries.view.management.HouseholdManagementView
 import com.lulakssoft.mygroceries.view.management.HouseholdManagementViewModel
+import com.lulakssoft.mygroceries.view.products.ProductDetailView
 import com.lulakssoft.mygroceries.view.products.ProductsCreationView
 import com.lulakssoft.mygroceries.view.products.ProductsCreationViewModel
 import com.lulakssoft.mygroceries.view.products.ProductsView
@@ -107,7 +110,10 @@ fun MainContent(
         },
         bottomBar = {
             AnimatedVisibility(
-                visible = currentRoute != "householdManagement" && currentRoute != "productsCreation",
+                visible =
+                    currentRoute != "householdManagement" &&
+                        currentRoute != "productsCreation" &&
+                        currentRoute != "productDetail/{productId}",
                 enter = slideInVertically(initialOffsetY = { it }),
                 exit = slideOutVertically(targetOffsetY = { it }),
             ) {
@@ -165,15 +171,29 @@ fun MainContent(
             }
             composable(route = "productsView") {
                 productsViewModel.updateSelectedHousehold(viewModel.selectedHousehold)
-                ProductsView(productsViewModel, onSyncProducts, onNavigateToCreation = {
-                    navController.navigate("productsCreation") {
-                        popUpTo(navController.graph.startDestinationId) {
-                            saveState = true
+                ProductsView(
+                    productsViewModel,
+                    onSyncProducts,
+                    onNavigateToCreation = {
+                        navController.navigate("productsCreation") {
+                            popUpTo(navController.graph.startDestinationId) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
                         }
-                        launchSingleTop = true
-                        restoreState = true
-                    }
-                }, syncing)
+                    },
+                    onNavigateToDetails = { productId ->
+                        navController.navigate("productDetail/$productId") {
+                            popUpTo(navController.graph.startDestinationId) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    },
+                    syncing,
+                )
             }
             composable(route = "scannerView") {
                 ScannerView(scannerViewModel)
@@ -194,6 +214,21 @@ fun MainContent(
                     navController.navigate("productsView") {
                         popUpTo("productsCreation") { inclusive = true }
                     }
+                }
+            }
+            composable(
+                route = "productDetail/{productId}",
+                arguments = listOf(navArgument("productId") { type = NavType.StringType }),
+            ) { backStackEntry ->
+                val productId = backStackEntry.arguments?.getString("productId")
+                if (productId != null) {
+                    ProductDetailView(
+                        viewModel = productsViewModel,
+                        productId = productId,
+                        onNavigateBack = {
+                            navController.popBackStack()
+                        },
+                    )
                 }
             }
         }

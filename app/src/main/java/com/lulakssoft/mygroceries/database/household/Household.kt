@@ -13,5 +13,4 @@ data class Household(
     val createdAt: LocalDateTime = LocalDateTime.now(),
     val isPrivate: Boolean = false,
     val firestoreId: String? = null,
-    val synced: Boolean = false,
 )

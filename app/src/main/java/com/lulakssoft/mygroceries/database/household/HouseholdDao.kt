@@ -26,7 +26,7 @@ interface HouseholdDao {
             "WHERE :userId = household_member_table.userId " +
             "AND household_table.id = household_member_table.householdId",
     )
-    suspend fun getHouseholdsByUserId(userId: String): List<Household>
+    fun getHouseholdsByUserId(userId: String): Flow<List<Household>>
 
     @Insert
     suspend fun insertHouseholdAndGetId(household: Household): Long
@@ -34,12 +34,11 @@ interface HouseholdDao {
     @Query("SELECT * FROM household_table WHERE firestoreId = :firestoreId LIMIT 1")
     suspend fun getHouseholdByFirestoreId(firestoreId: String): Household?
 
-    @Query("UPDATE household_table SET householdName = :name, isPrivate = :isPrivate, synced = :synced WHERE id = :id")
+    @Query("UPDATE household_table SET householdName = :name, isPrivate = :isPrivate WHERE id = :id")
     suspend fun updateHousehold(
         id: Int,
         name: String,
         isPrivate: Boolean,
-        synced: Boolean,
     )
 
     @Query("SELECT * FROM household_activity_table WHERE firestoreId = :firestoreId ORDER BY timestamp DESC LIMIT 10")

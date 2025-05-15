@@ -37,7 +37,9 @@ class MainViewModel : ViewModel() {
     internal var currentUser: UserData? = null
 
     // Flow für die Haushalte des aktuellen Benutzers
-    var households by mutableStateOf<List<Household>>(emptyList())
+    private var _households = mutableStateOf<Flow<List<Household>>>(emptyFlow())
+    val households: Flow<List<Household>>
+        get() = _households.value
 
     private var _members = mutableStateOf<Flow<List<HouseholdMember>>>(emptyFlow())
     val members: Flow<List<HouseholdMember>>
@@ -58,7 +60,7 @@ class MainViewModel : ViewModel() {
         // Wenn ein Benutzer gesetzt wurde, hole die Haushalte für diesen Benutzer
         currentUser?.let { user ->
             viewModelScope.launch {
-                households = householdRepository.getHouseholdsByUserId(user.userId)
+                _households.value = householdRepository.getHouseholdsByUserId(user.userId)
             }
         }
     }
@@ -133,7 +135,7 @@ class MainViewModel : ViewModel() {
         currentUser = userData
         // Aktualisiere die Haushalte für den neuen Benutzer
         viewModelScope.launch {
-            households = householdRepository.getHouseholdsByUserId(userData.userId)
+            _households.value = householdRepository.getHouseholdsByUserId(userData.userId)
         }
     }
 

@@ -34,34 +34,16 @@ class HouseholdSyncService(
         try {
             Log.d(TAG, "Starting household sync for user: $userId")
 
-            val localHouseholds = localHouseholdRepository.getHouseholdsByUserId(userId)
-            Log.d(TAG, "Fetched ${localHouseholds.size} local households")
-
-            for (localHousehold in localHouseholds) {
-                if (!localHousehold.synced) {
-                    Log.d(TAG, "Adding missing household to Firestore: ${localHousehold.householdName}")
-                    try {
-                        FirestoreManager().syncNewHousehold(localHousehold, userId)
-                    } catch (e: Exception) {
-                        Log.e(TAG, "Error adding household to Firestore: ${localHousehold.householdName}", e)
-                    }
-                }
-            }
-
+            // 1. Hole Remote-Daten
             val remoteHouseholds = firestoreRepository.getUserHouseholds(userId)
             Log.d(TAG, "Fetched ${remoteHouseholds.size} remote households")
 
-            for (localHousehold in localHouseholds) {
-                val householdExistsInFirestore =
-                    remoteHouseholds.any { it.firestoreId == localHousehold.firestoreId }
-                if (!householdExistsInFirestore) {
-                    Log.d(TAG, "Deleting local household: ${localHousehold.householdName}")
-                    localHouseholdRepository.deleteHousehold(localHousehold)
-                }
-            }
-
+            // 2. Für jeden Remote-Haushalt
             for (remoteHousehold in remoteHouseholds) {
+                // Konvertiere zu lokalem Household-Objekt
                 val household = convertToLocalHousehold(remoteHousehold)
+
+                // Speichere in lokaler DB
                 val householdId = localHouseholdRepository.insertOrUpdateHousehold(household)
 
                 try {

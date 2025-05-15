@@ -51,6 +51,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -95,7 +96,7 @@ fun HouseholdSelectionView(
     val householdManagementViewModel =
         viewModel { HouseholdManagementViewModel(householdRepository) }
 
-    val households = viewModel.households
+    val households by viewModel.households.collectAsState(initial = emptyList())
     val refreshing = viewModel.isSyncing
     val pullRefreshState = rememberPullToRefreshState()
     val onRefresh = { viewModel.syncHouseholds(context) }

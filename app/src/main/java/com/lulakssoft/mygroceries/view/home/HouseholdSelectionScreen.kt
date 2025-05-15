@@ -59,7 +59,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -118,6 +117,7 @@ fun HouseholdSelectionScreen(
         topBar = {
             TopAppBar(
                 title = { Text("Select Household") },
+                modifier = Modifier.fillMaxWidth().clip(shape = RoundedCornerShape(bottomStart = 8.dp, bottomEnd = 8.dp)),
                 colors =
                     TopAppBarDefaults.topAppBarColors(
                         containerColor = MaterialTheme.colorScheme.primary,
@@ -262,12 +262,7 @@ private fun ActionButtons(
             modifier
                 .fillMaxWidth()
                 .padding(16.dp)
-                .shadow(
-                    elevation = 8.dp,
-                    shape = RoundedCornerShape(16.dp),
-                    clip = false,
-                ).clip(RoundedCornerShape(16.dp))
-                .background(MaterialTheme.colorScheme.surface)
+                .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.4f), shape = RoundedCornerShape(16.dp))
                 .padding(16.dp),
         horizontalArrangement = Arrangement.spacedBy(16.dp),
     ) {
@@ -368,6 +363,7 @@ private fun CreateHouseholdDialog(
             }
         },
         shape = RoundedCornerShape(16.dp),
+        containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.8f),
     )
 }
 
@@ -428,6 +424,7 @@ private fun JoinHouseholdDialog(
             }
         },
         shape = RoundedCornerShape(16.dp),
+        containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.8f),
     )
 }
 

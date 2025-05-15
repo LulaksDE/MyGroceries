@@ -82,8 +82,12 @@ class ProductRepository(
     suspend fun getProductsByFirestoreId(firestoreId: String) = productDao.selectProductsByFirestoreId(firestoreId)
 
     suspend fun deleteProduct(product: Product) {
-        productDao.delete(product)
-        firestoreManager.deleteProductFromHousehold(product)
+        if (product.isSynced) {
+            productDao.delete(product)
+            firestoreManager.deleteProductFromHousehold(product)
+        } else {
+            productDao.delete(product)
+        }
     }
 
     suspend fun deleteAll() {

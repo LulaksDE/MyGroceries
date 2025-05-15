@@ -76,6 +76,7 @@ fun ProductsView(
     var isGridView by remember { mutableStateOf(true) }
     var selectionMode by remember { mutableStateOf(false) }
     var selectedProducts by remember { mutableStateOf(setOf<Product>()) }
+    var orderByDate by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -159,6 +160,18 @@ fun ProductsView(
                         )
 
                         Row {
+                            IconButton(
+                                onClick = {
+                                    orderByDate = !orderByDate
+                                },
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.DateRange,
+                                    contentDescription = "Filter products",
+                                    tint = MaterialTheme.colorScheme.primary,
+                                )
+                            }
+
                             IconButton(onClick = { selectionMode = true }) {
                                 Icon(
                                     painter = painterResource(id = R.drawable.baseline_select_all_24),
@@ -216,8 +229,14 @@ fun ProductsView(
             if (viewModel.productList.isEmpty()) {
                 EmptyProductsView()
             } else {
+                val orderedProducts =
+                    if (orderByDate) {
+                        viewModel.productList.sortedBy { it.productBestBeforeDate }
+                    } else {
+                        viewModel.productList
+                    }
                 val filteredProducts =
-                    viewModel.productList.filter {
+                    orderedProducts.filter {
                         it.productName.contains(searchQuery, ignoreCase = true) ||
                             searchQuery.isEmpty()
                     }

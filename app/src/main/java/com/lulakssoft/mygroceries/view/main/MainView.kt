@@ -1,8 +1,6 @@
 package com.lulakssoft.mygroceries.view.main
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -26,24 +24,8 @@ fun MainView(
     val databaseApp = remember { DatabaseApp.getInstance(context) }
     val authClient = remember { GoogleAuthUiClient(context) }
 
-    // Check if user has households
-    val households by viewModel.households.collectAsState(initial = emptyList())
-    val hasHouseholds = households.isNotEmpty()
-
     // Remember last selected household
     val selectedHousehold = remember { mutableStateOf<Household?>(null) }
-
-    // Route based on household selection
-    LaunchedEffect(key1 = hasHouseholds) {
-        if (!hasHouseholds) {
-            navController.navigate("householdSelection") {
-                popUpTo(navController.graph.startDestinationId) { inclusive = true }
-            }
-        } else if (selectedHousehold.value == null) {
-            selectedHousehold.value = households.first()
-            viewModel.selectedHousehold = households.first()
-        }
-    }
 
     NavHost(navController = navController, startDestination = "householdSelection") {
         composable("householdSelection") {

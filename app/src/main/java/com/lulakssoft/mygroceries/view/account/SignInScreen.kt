@@ -22,7 +22,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -34,7 +33,6 @@ fun SignInScreen(
     onAuthSuccess: () -> Unit,
 ) {
     val authState by viewModel.authState.collectAsState()
-    val context = LocalContext.current
 
     // Respond to authentication state changes
     LaunchedEffect(authState) {
@@ -97,7 +95,7 @@ fun SignInScreen(
                     Spacer(modifier = Modifier.height(32.dp))
 
                     Button(
-                        onClick = { viewModel.signIn(context) },
+                        onClick = { viewModel.signIn() },
                         modifier = Modifier.fillMaxWidth(0.8f),
                     ) {
                         Icon(

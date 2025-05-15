@@ -1,7 +1,5 @@
 package com.lulakssoft.mygroceries.view.account
 
-import android.content.Context
-import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -9,11 +7,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
-import com.lulakssoft.mygroceries.database.household.HouseholdRepository
-import com.lulakssoft.mygroceries.database.product.DatabaseApp
-import com.lulakssoft.mygroceries.database.product.ProductRepository
-import com.lulakssoft.mygroceries.dataservice.FirestoreHouseholdRepository
-import com.lulakssoft.mygroceries.sync.HouseholdSyncService
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -44,7 +37,8 @@ class AuthViewModel(
                             UserData(
                                 userId = user.uid,
                                 username = "Guest",
-                                profilePictureUrl = null,
+                                profilePictureUrl = "",
+                                email = "",
                             ),
                         )
                 } ?: run {
@@ -55,7 +49,7 @@ class AuthViewModel(
             }
         }
 
-    fun signIn(context: Context) =
+    fun signIn() =
         viewModelScope.launch {
             _authState.value = AuthState.Loading
 
@@ -70,41 +64,8 @@ class AuthViewModel(
                 }
             if (_authState.value is AuthState.Authenticated) {
                 val userData = (_authState.value as AuthState.Authenticated).userData
-                syncAfterLogin(userData, context)
             }
         }
-
-    private fun syncAfterLogin(
-        userData: UserData,
-        context: Context,
-    ) {
-        viewModelScope.launch {
-            try {
-                loading = true
-                errorMessage = ""
-                val firestoreRepo = FirestoreHouseholdRepository(context)
-                val localHouseholdRepo =
-                    HouseholdRepository(
-                        DatabaseApp.getInstance(googleAuthUiClient.getContext()).householdDao,
-                        DatabaseApp.getInstance(googleAuthUiClient.getContext()).householdMemberDao,
-                        DatabaseApp.getInstance(googleAuthUiClient.getContext()).householdInvitationDao,
-                    )
-                val localProductRepo =
-                    ProductRepository(
-                        DatabaseApp.getInstance(googleAuthUiClient.getContext()).productDao,
-                    )
-
-                val syncService =
-                    HouseholdSyncService(localHouseholdRepo, localProductRepo, firestoreRepo)
-                syncService.syncUserHouseholds(userData.userId)
-            } catch (e: Exception) {
-                Log.e("AuthViewModel", "Error during sync after login", e)
-                errorMessage = "Error during initial sync: ${e.message}"
-            } finally {
-                loading = false
-            }
-        }
-    }
 
     init {
         // Check if already signed in

@@ -68,6 +68,8 @@ class GoogleAuthUiClient(
 
                             if (user != null) {
                                 Log.d(TAG, "Sign in successful for user ID: ${user.uid}")
+                                Log.d(TAG, "User display name: ${user.displayName}")
+                                Log.d(TAG, "User profile picture url: ${user.photoUrl}")
                                 return SignInResult(
                                     data = user.toUserData(),
                                     errorMessage = null,

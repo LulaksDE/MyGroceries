@@ -2,6 +2,7 @@ package com.lulakssoft.mygroceries.database.product
 
 import android.util.Log
 import com.lulakssoft.mygroceries.dataservice.FirestoreManager
+import java.time.LocalDate
 
 class ProductRepository(
     val productDao: ProductDao,
@@ -87,5 +88,11 @@ class ProductRepository(
 
     suspend fun deleteAll() {
         productDao.deleteAll()
+    }
+
+    suspend fun getExpiringProducts(daysThreshold: Int): List<Product> {
+        val today = LocalDate.now()
+        val thresholdDate = today.plusDays(daysThreshold.toLong())
+        return productDao.getProductsExpiringBefore(thresholdDate)
     }
 }

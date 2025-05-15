@@ -41,4 +41,12 @@ interface ProductDao {
 
     @Delete
     suspend fun delete(product: Product)
+
+    @Query(
+        "SELECT * FROM product_table WHERE productBestBeforeDate <= :date AND productBestBeforeDate >= :today ORDER BY productBestBeforeDate ASC",
+    )
+    suspend fun getProductsExpiringBefore(
+        date: LocalDate,
+        today: LocalDate = LocalDate.now(),
+    ): List<Product>
 }

@@ -28,14 +28,14 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             MyGroceriesTheme {
-                MyGroceriesApp()
+                MyGroceriesAppUI()
             }
         }
     }
 }
 
 @Composable
-fun MyGroceriesApp() {
+fun MyGroceriesAppUI() {
     val context = LocalContext.current
     val authClient = GoogleAuthUiClient(context)
     val authViewModel = viewModel { AuthViewModel(authClient) }
@@ -45,7 +45,6 @@ fun MyGroceriesApp() {
         viewModel<MainViewModel>().apply {
             setOnSignOutCallback { authViewModel.resetState() }
         }
-    mainViewModel.initialize(DatabaseApp.getInstance(context))
 
     val onSignOut: () -> Unit = {
         authViewModel.resetState()
@@ -54,6 +53,7 @@ fun MyGroceriesApp() {
     when (authState) {
         is AuthState.Authenticated -> {
             // Pass authenticated user to MainView
+            mainViewModel.initialize(DatabaseApp.getInstance(context))
             val userData = (authState as AuthState.Authenticated).userData
             mainViewModel.setCurrentUser(userData)
             MainView(mainViewModel, onSignOut)

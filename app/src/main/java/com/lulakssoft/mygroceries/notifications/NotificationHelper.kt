@@ -26,7 +26,7 @@ class NotificationHelper(
     }
 
     private fun createNotificationChannel() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             val name = "Expiring Products"
             val descriptionText = "Notifications for products about to expire"
             val importance = NotificationManager.IMPORTANCE_DEFAULT

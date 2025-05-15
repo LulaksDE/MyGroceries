@@ -1,14 +1,22 @@
 package com.lulakssoft.mygroceries
 
+import android.Manifest
 import android.content.pm.ActivityInfo
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.firebase.FirebaseApp
 import com.lulakssoft.mygroceries.database.product.DatabaseApp
@@ -48,6 +56,32 @@ fun MyGroceriesAppUI() {
 
     val onSignOut: () -> Unit = {
         authViewModel.resetState()
+    }
+
+    val permissionLauncher =
+        rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.RequestPermission(),
+            onResult = { isGranted ->
+                if (isGranted) {
+                    Log.d("Notifications", "Permission granted")
+                } else {
+                    Log.d("Notifications", "Permission denied")
+                }
+            },
+        )
+
+    LaunchedEffect(Unit) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            val hasPermission =
+                ContextCompat.checkSelfPermission(
+                    context,
+                    Manifest.permission.POST_NOTIFICATIONS,
+                ) == PackageManager.PERMISSION_GRANTED
+
+            if (!hasPermission) {
+                permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
+        }
     }
 
     when (authState) {

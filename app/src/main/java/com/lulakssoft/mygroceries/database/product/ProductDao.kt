@@ -4,15 +4,11 @@ import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.Query
-import kotlinx.coroutines.flow.Flow
 import java.time.LocalDate
 import java.time.LocalDateTime
 
 @Dao
 interface ProductDao {
-    @Query("SELECT * FROM product_table ORDER BY productName ASC")
-    fun selectAllProductsSortedByName(): Flow<List<Product>>
-
     @Query("SELECT * FROM product_table WHERE householdId = :householdId ORDER BY productName ASC")
     suspend fun selectProductsByHouseholdId(householdId: Int): List<Product>
 

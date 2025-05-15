@@ -51,7 +51,6 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -77,7 +76,7 @@ import kotlin.random.Random
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HouseholdSelectionScreen(
+fun HouseholdSelectionView(
     onHouseholdSelected: (Household) -> Unit,
     viewModel: MainViewModel,
     authClient: GoogleAuthUiClient,
@@ -96,7 +95,7 @@ fun HouseholdSelectionScreen(
     val householdManagementViewModel =
         viewModel { HouseholdManagementViewModel(householdRepository) }
 
-    val households by viewModel.households.collectAsState(initial = emptyList())
+    val households = viewModel.households
     val refreshing = viewModel.isSyncing
     val pullRefreshState = rememberPullToRefreshState()
     val onRefresh = { viewModel.syncHouseholds(context) }

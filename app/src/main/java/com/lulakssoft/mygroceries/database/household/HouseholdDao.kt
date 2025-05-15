@@ -9,9 +9,6 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface HouseholdDao {
-    @Query("SELECT * FROM household_table ORDER BY householdName ASC")
-    fun selectAllHouseholdsSortedByName(): Flow<List<Household>>
-
     @Insert
     suspend fun insertHousehold(household: Household)
 
@@ -29,7 +26,7 @@ interface HouseholdDao {
             "WHERE :userId = household_member_table.userId " +
             "AND household_table.id = household_member_table.householdId",
     )
-    fun getHouseholdsByUserId(userId: String): Flow<List<Household>>
+    suspend fun getHouseholdsByUserId(userId: String): List<Household>
 
     @Insert
     suspend fun insertHouseholdAndGetId(household: Household): Long
@@ -37,11 +34,12 @@ interface HouseholdDao {
     @Query("SELECT * FROM household_table WHERE firestoreId = :firestoreId LIMIT 1")
     suspend fun getHouseholdByFirestoreId(firestoreId: String): Household?
 
-    @Query("UPDATE household_table SET householdName = :name, isPrivate = :isPrivate WHERE id = :id")
+    @Query("UPDATE household_table SET householdName = :name, isPrivate = :isPrivate, synced = :synced WHERE id = :id")
     suspend fun updateHousehold(
         id: Int,
         name: String,
         isPrivate: Boolean,
+        synced: Boolean,
     )
 
     @Query("SELECT * FROM household_activity_table WHERE firestoreId = :firestoreId ORDER BY timestamp DESC LIMIT 10")

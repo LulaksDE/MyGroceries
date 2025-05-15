@@ -2,19 +2,17 @@ package com.lulakssoft.mygroceries.view.main
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.lulakssoft.mygroceries.database.household.Household
 import com.lulakssoft.mygroceries.database.product.DatabaseApp
 import com.lulakssoft.mygroceries.view.account.GoogleAuthUiClient
-import com.lulakssoft.mygroceries.view.home.HouseholdSelectionScreen
+import com.lulakssoft.mygroceries.view.home.HouseholdSelectionView
 
 @Composable
 fun MainView(
@@ -27,7 +25,7 @@ fun MainView(
     val authClient = remember { GoogleAuthUiClient(context) }
 
     // Check if user has households
-    val households by viewModel.households.collectAsState(initial = emptyList())
+    val households = viewModel.households
     val hasHouseholds = households.isNotEmpty()
 
     // Remember last selected household
@@ -47,7 +45,7 @@ fun MainView(
 
     NavHost(navController = navController, startDestination = "householdSelection") {
         composable("householdSelection") {
-            HouseholdSelectionScreen(
+            HouseholdSelectionView(
                 onHouseholdSelected = { household ->
                     selectedHousehold.value = household
                     viewModel.selectedHousehold = household

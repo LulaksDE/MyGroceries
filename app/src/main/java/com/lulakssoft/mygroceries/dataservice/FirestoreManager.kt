@@ -25,10 +25,10 @@ class FirestoreManager {
     suspend fun syncNewHousehold(
         household: Household,
         userName: String,
-    ) {
+    ): Boolean {
         if (household.firestoreId == null) {
             Log.e("FirestoreManager", "Firestore ID is null, cannot sync household")
-            return
+            return false
         }
         try {
             val householdData =
@@ -54,8 +54,11 @@ class FirestoreManager {
                 "Household created: ${household.householdName}",
             )
             Log.d("FirestoreManager", "Household synchronized to Firestore")
+
+            return true
         } catch (e: Exception) {
             Log.e("FirestoreManager", "Failed to sync household: ${e.message}")
+            return false
         }
     }
 

@@ -6,7 +6,6 @@ import com.lulakssoft.mygroceries.dataservice.FirestoreManager
 class ProductRepository(
     val productDao: ProductDao,
 ) {
-    val allProducts = productDao.selectAllProductsSortedByName()
     private val firestoreManager = FirestoreManager()
 
     suspend fun insertProduct(product: Product) {

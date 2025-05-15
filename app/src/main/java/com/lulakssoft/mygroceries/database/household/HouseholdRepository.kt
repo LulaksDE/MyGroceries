@@ -3,7 +3,6 @@ package com.lulakssoft.mygroceries.database.household
 import android.util.Log
 import com.google.firebase.auth.FirebaseAuth
 import com.lulakssoft.mygroceries.dataservice.FirestoreManager
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import java.time.LocalDateTime
 import java.util.UUID
@@ -18,7 +17,7 @@ class HouseholdRepository(
 
     suspend fun insertHouseholdAndGetId(household: Household): Long = householdDao.insertHouseholdAndGetId(household)
 
-    fun getHouseholdsByUserId(Id: String): Flow<List<Household>> = householdDao.getHouseholdsByUserId(Id)
+    suspend fun getHouseholdsByUserId(Id: String): List<Household> = householdDao.getHouseholdsByUserId(Id)
 
     suspend fun getMemberCountForHousehold(firestoreId: String): Int = memberDao.getMemberCountForHousehold(firestoreId)
 
@@ -56,9 +55,14 @@ class HouseholdRepository(
             )
         memberDao.insertMember(member)
 
-        // Mit Firestore synchronisieren wenn Firestore ID nicht null ist
+        var syncResult = false
         if (household.firestoreId != null) {
-            firestoreManager.syncNewHousehold(household, member.userName)
+            syncResult = firestoreManager.syncNewHousehold(household, member.userName)
+            if (syncResult) {
+                householdDao.updateHousehold(householdId, household.householdName, household.isPrivate, true)
+            } else {
+                Log.e("HouseholdRepository", "Failed to sync household with Firestore")
+            }
         } else {
             Log.e("HouseholdRepository", "Firestore ID is null")
         }
@@ -89,19 +93,17 @@ class HouseholdRepository(
     suspend fun insertOrUpdateHousehold(household: Household): Long {
         val existingHousehold =
             household.firestoreId?.let { firestoreId ->
-                // Suche nach Haushalt mit dieser firestoreId
                 householdDao.getHouseholdByFirestoreId(firestoreId)
             }
 
         return if (existingHousehold == null) {
-            // Einfügen als neuen Haushalt
             householdDao.insertHouseholdAndGetId(household)
         } else {
-            // Aktualisieren des bestehenden Haushalts
             householdDao.updateHousehold(
                 existingHousehold.id,
                 household.householdName,
                 household.isPrivate,
+                true,
             )
             existingHousehold.id.toLong()
         }

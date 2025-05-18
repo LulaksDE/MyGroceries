@@ -18,8 +18,8 @@ class MyGroceriesApp : Application() {
         Log.d("MyGroceriesApp", "Setting up recurring expiry check...")
         val expiryCheckRequest =
             PeriodicWorkRequestBuilder<ExpiringProductsCheckWorker>(
-                15,
-                TimeUnit.MINUTES,
+                1,
+                TimeUnit.DAYS,
             ).build()
 
         WorkManager.getInstance(this).enqueueUniquePeriodicWork(

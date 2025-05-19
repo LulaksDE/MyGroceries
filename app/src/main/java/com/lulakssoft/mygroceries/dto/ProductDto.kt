@@ -18,4 +18,6 @@ data class ProductInfo(
     val name: String,
     @SerialName("image_url")
     val imageUrl: String,
+    @SerialName("quantity")
+    val quantity: String,
 )

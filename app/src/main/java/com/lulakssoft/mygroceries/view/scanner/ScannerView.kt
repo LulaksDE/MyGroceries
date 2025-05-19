@@ -1,35 +1,70 @@
 package com.lulakssoft.mygroceries.view.scanner
 
-import android.app.DatePickerDialog
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.icu.util.Calendar
+import android.net.Uri
+import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountBox
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.DisplayMode
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
@@ -51,160 +86,142 @@ fun ScannerView(viewModel: ScannerViewModel) {
             modifier = Modifier.padding(innerPadding),
         ) {
             if (viewModel.scannedSomething) {
-                ProductInfoDialog(viewModel)
-            } else {
-                ProductViewWithScanner { qrCode ->
-                    viewModel.onQrCodeScanned(qrCode) // Pass the QR code to the ViewModel
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun ProductInfoDialog(viewModel: ScannerViewModel) {
-    // Calculate default date (current date + 1 week)
-    val initialCalendar =
-        remember {
-            Calendar.getInstance().apply {
-                add(Calendar.DAY_OF_YEAR, 7)
-            }
-        }
-    var selectedDate by remember { mutableStateOf(initialCalendar) }
-
-    AlertDialog(
-        onDismissRequest = {
-            viewModel.scannedSomething = false
-        },
-        title = {
-            Text(text = "Product Information")
-        },
-        text = {
-            Column(modifier = Modifier.fillMaxWidth()) {
-                if (viewModel.loading) {
-                    CircularProgressIndicator(modifier = Modifier.align(CenterHorizontally))
+                if (viewModel.errorMessage.isEmpty()) {
+                    EnhancedProductInfoDialog(viewModel)
                 } else {
-                    Text("Product: ${viewModel.product.product.name}")
-                    Text("Brand: ${viewModel.product.product.brand}")
-                    Image(
-                        bitmap = viewModel.productImage,
-                        contentDescription = "Product Image",
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-                    DatePicker(
-                        initialDate = selectedDate,
-                        onDateSelected = { newDate ->
-                            viewModel.productBestBefore = newDate.toLocalDate()
-                            selectedDate = newDate
+                    AlertDialog(
+                        onDismissRequest = { viewModel.scannedSomething = false },
+                        title = { Text("Error") },
+                        text = { Text(viewModel.errorMessage, color = MaterialTheme.colorScheme.error) },
+                        confirmButton = {
+                            TextButton(onClick = { viewModel.scannedSomething = false }) {
+                                Text("OK")
+                            }
                         },
                     )
-                    Text("Selected Date: ${selectedDate.formatToString()}")
+                }
+            } else {
+                EnhancedProductViewWithScanner { qrCode ->
+                    viewModel.onQrCodeScanned(qrCode)
                 }
             }
-        },
-        confirmButton = {
-            Button(
-                onClick = {
-                    // Save the product to the database
-                    viewModel.insert()
-                    viewModel.scannedSomething = false
-                    viewModel.scannedCode = ""
-                    viewModel.product = ProductDto("", ProductInfo("", "", ""))
-                    viewModel.productImage = ImageBitmap(1, 1)
-                },
-                enabled = !viewModel.loading,
-            ) {
-                Text("Save")
-            }
-        },
-        dismissButton = {
-            Button(onClick = {
-                viewModel.scannedSomething = false
-                viewModel.scannedCode = ""
-                viewModel.product = ProductDto("", ProductInfo("", "", ""))
-                viewModel.productImage = ImageBitmap(1, 1)
-            }) {
-                Text("Cancel")
-            }
-        },
-    )
-}
-
-@Composable
-fun DatePicker(
-    initialDate: Calendar,
-    onDateSelected: (Calendar) -> Unit,
-) {
-    val context = LocalContext.current
-
-    val datePickerDialog =
-        DatePickerDialog(
-            context,
-            { _, selectedYear, selectedMonth, selectedDay ->
-                val newDate =
-                    Calendar.getInstance().apply {
-                        set(selectedYear, selectedMonth, selectedDay)
-                    }
-                onDateSelected(newDate)
-            },
-            initialDate.get(Calendar.YEAR),
-            initialDate.get(Calendar.MONTH),
-            initialDate.get(Calendar.DAY_OF_MONTH),
-        )
-
-    Button(onClick = { datePickerDialog.show() }) {
-        Text("Select Date")
+        }
     }
 }
 
-// Extension function to format Calendar date
-fun Calendar.formatToString(): String {
-    val day = this.get(Calendar.DAY_OF_MONTH)
-    val month = this.get(Calendar.MONTH) + 1 // Adding 1 since Calendar.MONTH is 0-based
-    val year = this.get(Calendar.YEAR)
-    return "$day/$month/$year"
-}
-
-fun Calendar.toLocalDate(): LocalDate =
-    LocalDate.of(
-        this.get(Calendar.YEAR),
-        this.get(Calendar.MONTH) + 1, // Adding 1 since Calendar.MONTH is 0-based
-        this.get(Calendar.DAY_OF_MONTH),
-    )
-
 @Composable
-fun ProductViewWithScanner(onQrCodeScanned: (String) -> Unit) {
+fun EnhancedProductViewWithScanner(onQrCodeScanned: (String) -> Unit) {
     var hasCameraPermission by remember { mutableStateOf(false) }
+    val context = LocalContext.current
 
-    // Request Camera Permission
     RequestPermission(permission = android.Manifest.permission.CAMERA) { granted ->
         hasCameraPermission = granted
     }
 
     if (hasCameraPermission) {
-        Column(modifier = Modifier.fillMaxSize()) {
-            // Scanner Area
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            horizontalAlignment = CenterHorizontally,
+        ) {
+            Text(
+                text = "Scan barcode",
+                style = MaterialTheme.typography.headlineSmall,
+                modifier = Modifier.padding(16.dp),
+            )
+
             Box(
                 modifier =
                     Modifier
                         .weight(1f)
-                        .fillMaxWidth(),
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                contentAlignment = Alignment.Center,
             ) {
-                QrCodeScanner(onQrCodeScanned = onQrCodeScanned)
+                EnhancedQrCodeScanner(onQrCodeScanned = onQrCodeScanned)
+
+                Box(
+                    modifier =
+                        Modifier
+                            .size(250.dp)
+                            .border(
+                                width = 2.dp,
+                                color = MaterialTheme.colorScheme.primary,
+                                shape = RoundedCornerShape(16.dp),
+                            ),
+                )
+                ScanIndicator()
+            }
+
+            // Hilfetext
+            Card(
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                colors =
+                    CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    ),
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text(
+                        text = "Place the barcode inside the frame",
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "The scan will start automatically.",
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                }
             }
         }
     } else {
-        Text("Camera permission is required to use the scanner.")
+        Column(
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = CenterHorizontally,
+        ) {
+            Icon(
+                imageVector = Icons.Default.AccountBox,
+                contentDescription = null,
+                modifier = Modifier.size(48.dp),
+                tint = MaterialTheme.colorScheme.error,
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                "Camera permission required",
+                style = MaterialTheme.typography.headlineSmall,
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                "Please allow camera access in the app settings to use the scanner.",
+                textAlign = TextAlign.Center,
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            Button(onClick = {
+                val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+                val uri = Uri.fromParts("package", context.packageName, null)
+                intent.data = uri
+                context.startActivity(intent)
+            }) {
+                Text("Open settings")
+            }
+        }
     }
 }
 
 @Composable
-fun QrCodeScanner(onQrCodeScanned: (String) -> Unit) {
+fun EnhancedQrCodeScanner(onQrCodeScanned: (String) -> Unit) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val barcodeView = remember { DecoratedBarcodeView(context) }
 
-    // Observe the lifecycle of the composable
     DisposableEffect(lifecycleOwner) {
         val lifecycleObserver =
             object : DefaultLifecycleObserver {
@@ -236,26 +253,273 @@ fun QrCodeScanner(onQrCodeScanned: (String) -> Unit) {
                     object : BarcodeCallback {
                         override fun barcodeResult(result: BarcodeResult?) {
                             result?.text?.let { qrCode ->
-                                onQrCodeScanned(qrCode) // Pass scanned QR code to the callback
+                                onQrCodeScanned(qrCode)
                             }
                         }
 
-                        override fun possibleResultPoints(resultPoints: List<ResultPoint>) {
-                            // Optional: Handle possible result points
-                        }
+                        override fun possibleResultPoints(resultPoints: List<ResultPoint>) {}
                     },
                 )
-                resume() // Start the scanner
+                resume()
+                cameraSettings.isMeteringEnabled = true
+                cameraSettings.isExposureEnabled = true
+                cameraSettings.isAutoFocusEnabled = true
             }
         },
         modifier =
             Modifier
                 .fillMaxWidth()
-                .height(300.dp)
-                .padding(horizontal = 16.dp)
-                .clip(MaterialTheme.shapes.medium),
+                .aspectRatio(1f)
+                .clip(RoundedCornerShape(16.dp)),
     )
 }
+
+@Composable
+fun ScanIndicator() {
+    val infiniteTransition = rememberInfiniteTransition(label = "scan_pulse")
+    val scale by infiniteTransition.animateFloat(
+        initialValue = 0.6f,
+        targetValue = 1.0f,
+        animationSpec =
+            infiniteRepeatable(
+                animation = tween(1000),
+                repeatMode = RepeatMode.Reverse,
+            ),
+        label = "scan_pulse_animation",
+    )
+
+    Box(
+        modifier =
+            Modifier
+                .size(240.dp * scale)
+                .alpha(1 - scale + 0.3f)
+                .border(
+                    width = 1.dp,
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
+                    shape = RoundedCornerShape(16.dp),
+                ),
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun EnhancedProductInfoDialog(viewModel: ScannerViewModel) {
+    val initialCalendar =
+        remember {
+            Calendar.getInstance().apply {
+                add(Calendar.DAY_OF_YEAR, 7)
+            }
+        }
+    var selectedDate by remember { mutableStateOf(initialCalendar) }
+
+    val datePickerState =
+        rememberDatePickerState(
+            initialSelectedDateMillis = initialCalendar.timeInMillis,
+            initialDisplayMode = DisplayMode.Picker,
+        )
+    var showDatePicker by remember { mutableStateOf(false) }
+
+    var productAmountSlider by remember { mutableFloatStateOf(1f) }
+
+    AlertDialog(
+        onDismissRequest = {
+            viewModel.scannedSomething = false
+        },
+        title = {
+            Text(
+                text = "Add product",
+                style = MaterialTheme.typography.headlineSmall,
+            )
+        },
+        text = {
+            Column(modifier = Modifier.fillMaxWidth()) {
+                if (viewModel.loading) {
+                    Box(
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .height(200.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        CircularProgressIndicator()
+                    }
+                } else {
+                    Image(
+                        bitmap = viewModel.productImage,
+                        contentDescription = "product image",
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .height(150.dp)
+                                .clip(RoundedCornerShape(8.dp)),
+                        contentScale = ContentScale.FillHeight,
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors =
+                            CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                            ),
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Text(
+                                text = viewModel.product.product.name,
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = viewModel.product.product.brand,
+                                style = MaterialTheme.typography.bodyMedium,
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        "Quantity ${viewModel.productQuantity}",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Medium,
+                    )
+                    Slider(
+                        value = productAmountSlider,
+                        onValueChange = { newValue ->
+                            productAmountSlider = newValue
+                            viewModel.productQuantity = newValue.toInt()
+                        },
+                        valueRange = 1f..100f,
+                        steps = 99,
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                        colors =
+                            SliderDefaults.colors(
+                                thumbColor = MaterialTheme.colorScheme.primary,
+                                activeTickColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.0f),
+                                inactiveTickColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.0f),
+                            ),
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Text(
+                        "Best before date",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Medium,
+                    )
+
+                    if (showDatePicker) {
+                        DatePickerDialog(
+                            onDismissRequest = { showDatePicker = false },
+                            confirmButton = {
+                                TextButton(onClick = {
+                                    showDatePicker = false
+                                    datePickerState.selectedDateMillis?.let { millis ->
+                                        val date =
+                                            Calendar.getInstance().apply {
+                                                timeInMillis = millis
+                                            }
+                                        selectedDate = date
+                                        viewModel.productBestBefore = date.toLocalDate()
+                                    }
+                                }) {
+                                    Text("Confirm")
+                                }
+                            },
+                            dismissButton = {
+                                TextButton(onClick = { showDatePicker = false }) {
+                                    Text("Cancle")
+                                }
+                            },
+                        ) {
+                            DatePicker(
+                                modifier = Modifier.fillMaxWidth().padding(16.dp),
+                                state = datePickerState,
+                                showModeToggle = true,
+                            )
+                        }
+                    }
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Card(
+                            modifier = Modifier.weight(1f),
+                            colors =
+                                CardDefaults.cardColors(
+                                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                                ),
+                        ) {
+                            Text(
+                                text = selectedDate.formatToString(),
+                                modifier =
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .padding(16.dp),
+                                textAlign = TextAlign.Center,
+                            )
+                        }
+
+                        IconButton(
+                            onClick = { showDatePicker = true },
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.DateRange,
+                                contentDescription = "Date Picker",
+                            )
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    viewModel.insert()
+                    viewModel.scannedSomething = false
+                    viewModel.scannedCode = ""
+                    viewModel.product = ProductDto("", ProductInfo("", "", "", ""))
+                    viewModel.productImage = ImageBitmap(1, 1)
+                },
+                enabled = !viewModel.loading,
+                modifier = Modifier.fillMaxWidth(0.5f),
+            ) {
+                Text("Save")
+            }
+        },
+        dismissButton = {
+            TextButton(
+                onClick = {
+                    viewModel.scannedSomething = false
+                    viewModel.scannedCode = ""
+                    viewModel.product = ProductDto("", ProductInfo("", "", "", ""))
+                    viewModel.productImage = ImageBitmap(1, 1)
+                },
+            ) {
+                Text("Cancel")
+            }
+        },
+        shape = RoundedCornerShape(16.dp),
+        containerColor = MaterialTheme.colorScheme.surface,
+        tonalElevation = 8.dp,
+    )
+}
+
+fun Calendar.formatToString(): String {
+    val day = this.get(Calendar.DAY_OF_MONTH)
+    val month = this.get(Calendar.MONTH) + 1 // Adding 1 since Calendar.MONTH is 0-based
+    val year = this.get(Calendar.YEAR)
+    return "$day/$month/$year"
+}
+
+fun Calendar.toLocalDate(): LocalDate =
+    LocalDate.of(
+        this.get(Calendar.YEAR),
+        this.get(Calendar.MONTH) + 1, // Adding 1 since Calendar.MONTH is 0-based
+        this.get(Calendar.DAY_OF_MONTH),
+    )
 
 @Composable
 fun RequestPermission(
